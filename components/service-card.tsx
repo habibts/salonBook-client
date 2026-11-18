@@ -1,4 +1,6 @@
-import Link from "next/link"
+"use client"
+
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -14,6 +16,7 @@ interface Service {
 }
 
 export function ServiceCard({ service }: { service: Service }) {
+  const router = useRouter()
   return (
     <Card className="flex h-full flex-col overflow-hidden border-[#3A3834] bg-[#292929] text-[#F7F5F0]">
       <img src={service.image} alt={service.serviceName} className="aspect-[16/9] w-full object-cover" />
@@ -29,8 +32,11 @@ export function ServiceCard({ service }: { service: Service }) {
         </div>
       </CardContent>
       <CardFooter className="mt-auto">
-        <Button className="w-full bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]">
-          <Link href={`/services/${service._id}`}>View Details</Link>
+        <Button
+          className="w-full bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]"
+          onClick={() => router.push(`/services/${service._id}`)}
+        >
+          View Details
         </Button>
       </CardFooter>
     </Card>

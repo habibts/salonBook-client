@@ -16,6 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useSearchParams } from "next/navigation"
+import { Suspense } from "react"
 import { cn } from "@/lib/utils"
 import { ServiceCard } from "@/components/service-card"
 
@@ -32,12 +34,13 @@ interface Service {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 
-export default function ServicesPage() {
+export function ServicesPageContent() {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const [category, setCategory] = useState("all")
+  const searchParams = useSearchParams()
+  const [category, setCategory] = useState(searchParams.get("category") ?? "all")
   const [sort, setSort] = useState("none")
 
   async function fetchServices() {
@@ -157,5 +160,13 @@ export default function ServicesPage() {
           </div>
         )}
       </div>
+  )
+}
+
+export default function ServicesPage() {
+  return (
+    <Suspense fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}>
+      <ServicesPageContent />
+    </Suspense>
   )
 }
