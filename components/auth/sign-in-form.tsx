@@ -2,12 +2,15 @@
 
 import { useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
+import { CircleAlert } from "lucide-react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/lib/auth-client"
-import { cn } from "@/lib/utils"
 
 function SignInForm() {
   const router = useRouter()
@@ -47,10 +50,10 @@ function SignInForm() {
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
-      <div className="space-y-2">
-        <label htmlFor="email" className="text-sm font-medium text-midnight">
+      <Field>
+        <FieldLabel htmlFor="email" className="text-midnight">
           Email Address
-        </label>
+        </FieldLabel>
         <Input
           id="email"
           name="email"
@@ -59,16 +62,13 @@ function SignInForm() {
           placeholder="you@example.com"
           autoComplete="email"
         />
-      </div>
+      </Field>
 
-      <div className="space-y-2">
+      <Field>
         <div className="flex items-center justify-between">
-          <label
-            htmlFor="password"
-            className="text-sm font-medium text-midnight"
-          >
+          <FieldLabel htmlFor="password" className="text-midnight">
             Password
-          </label>
+          </FieldLabel>
           <a
             href="#"
             className="text-sm font-medium text-gold-hover underline-offset-2 transition-colors hover:text-midnight hover:underline"
@@ -84,38 +84,44 @@ function SignInForm() {
           placeholder="••••••••"
           autoComplete="current-password"
         />
-      </div>
+      </Field>
 
-      <div className="flex items-center gap-2.5">
+      <Field orientation="horizontal">
         <Checkbox
           id="remember"
           checked={rememberMe}
           onCheckedChange={(checked) => setRememberMe(checked)}
         />
-        <label htmlFor="remember" className="text-sm font-medium text-midnight">
+        <FieldLabel htmlFor="remember" className="text-midnight">
           Remember Me
-        </label>
-      </div>
+        </FieldLabel>
+      </Field>
 
       {error && (
-        <p
-          role="alert"
-          className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+        <Alert
+          variant="destructive"
+          className="border-destructive/30 bg-destructive/10"
         >
-          {error}
-        </p>
+          <CircleAlert />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <button
+      <Button
         type="submit"
+        size="lg"
         disabled={pending}
-        className={cn(
-          buttonVariants({ size: "lg" }),
-          "h-11 w-full rounded-full bg-gold text-base font-medium text-midnight hover:bg-gold-hover"
-        )}
+        className="h-11 w-full gap-2 rounded-full bg-gold text-base font-medium text-midnight hover:bg-gold-hover"
       >
-        {pending ? "Signing In…" : "Sign In"}
-      </button>
+        {pending ? (
+          <>
+            <Spinner />
+            Signing In…
+          </>
+        ) : (
+          "Sign In"
+        )}
+      </Button>
     </form>
   )
 }

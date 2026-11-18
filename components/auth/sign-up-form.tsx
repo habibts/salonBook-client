@@ -2,11 +2,14 @@
 
 import { useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
+import { CircleAlert } from "lucide-react"
 
-import { buttonVariants } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
+import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { Spinner } from "@/components/ui/spinner"
 import { authClient } from "@/lib/auth-client"
-import { cn } from "@/lib/utils"
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2 MB
 
@@ -73,13 +76,10 @@ function SignUpForm() {
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
-      <div className="space-y-2">
-        <label
-          htmlFor="full-name"
-          className="text-sm font-medium text-midnight"
-        >
+      <Field>
+        <FieldLabel htmlFor="full-name" className="text-midnight">
           Full Name
-        </label>
+        </FieldLabel>
         <Input
           id="full-name"
           name="name"
@@ -88,12 +88,12 @@ function SignUpForm() {
           placeholder="John Doe"
           autoComplete="name"
         />
-      </div>
+      </Field>
 
-      <div className="space-y-2">
-        <label htmlFor="email" className="text-sm font-medium text-midnight">
+      <Field>
+        <FieldLabel htmlFor="email" className="text-midnight">
           Email Address
-        </label>
+        </FieldLabel>
         <Input
           id="email"
           name="email"
@@ -102,12 +102,12 @@ function SignUpForm() {
           placeholder="you@example.com"
           autoComplete="email"
         />
-      </div>
+      </Field>
 
-      <div className="space-y-2">
-        <label htmlFor="password" className="text-sm font-medium text-midnight">
+      <Field>
+        <FieldLabel htmlFor="password" className="text-midnight">
           Password
-        </label>
+        </FieldLabel>
         <Input
           id="password"
           name="password"
@@ -117,15 +117,12 @@ function SignUpForm() {
           placeholder="••••••••"
           autoComplete="new-password"
         />
-      </div>
+      </Field>
 
-      <div className="space-y-2">
-        <label
-          htmlFor="profile-image"
-          className="text-sm font-medium text-midnight"
-        >
+      <Field>
+        <FieldLabel htmlFor="profile-image" className="text-midnight">
           Profile Image
-        </label>
+        </FieldLabel>
         <Input
           id="profile-image"
           name="profile-image"
@@ -133,27 +130,33 @@ function SignUpForm() {
           accept="image/png,image/jpeg,image/webp"
           className="text-muted-gray file:mr-3 file:h-7 file:rounded-md file:border-0 file:bg-champagne file:px-3 file:text-sm file:font-medium file:text-midnight hover:file:bg-gold/80"
         />
-      </div>
+      </Field>
 
       {error && (
-        <p
-          role="alert"
-          className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm font-medium text-destructive"
+        <Alert
+          variant="destructive"
+          className="border-destructive/30 bg-destructive/10"
         >
-          {error}
-        </p>
+          <CircleAlert />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      <button
+      <Button
         type="submit"
+        size="lg"
         disabled={pending}
-        className={cn(
-          buttonVariants({ size: "lg" }),
-          "h-11 w-full rounded-full bg-gold text-base font-medium text-midnight hover:bg-gold-hover"
-        )}
+        className="h-11 w-full gap-2 rounded-full bg-gold text-base font-medium text-midnight hover:bg-gold-hover"
       >
-        {pending ? "Creating Account…" : "Create Account"}
-      </button>
+        {pending ? (
+          <>
+            <Spinner />
+            Creating Account…
+          </>
+        ) : (
+          "Create Account"
+        )}
+      </Button>
     </form>
   )
 }
