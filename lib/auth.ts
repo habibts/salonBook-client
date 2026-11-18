@@ -4,7 +4,7 @@ import { mongodbAdapter } from "@better-auth/mongo-adapter";
 
 
 const client = new MongoClient(process.env.MONGODB_URI as string);
-const db = client.db('salonBook');
+export const db = client.db('salonBook');
 
 export const auth = betterAuth({
   database: mongodbAdapter(db, {
@@ -18,7 +18,26 @@ export const auth = betterAuth({
         google: { 
             clientId: process.env.GOOGLE_CLIENT_ID as string, 
             clientSecret: process.env.GOOGLE_CLIENT_SECRET as string, 
-        }, 
+        },
     },
 
+  /*
+   * SalonBook has exactly two roles: "customer" and "admin".
+   *
+   * `input: false` prevents a client from setting or changing its own role
+   * (Better Auth rejects the field with FIELD_NOT_ALLOWED on update), and
+   * `defaultValue` makes every new account a customer. Accounts created before
+   * this field existed simply have no value stored, which is read as
+   * "customer" everywhere in the app.
+   */
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        required: false,
+        defaultValue: "customer",
+        input: false,
+      },
+    },
+  },
 });
