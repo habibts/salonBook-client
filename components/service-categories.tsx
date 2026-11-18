@@ -33,10 +33,10 @@ export function ServiceCategories() {
   if (categories.length === 0) return null
 
   return (
-    <section className="bg-[#F7F5F0] px-4 py-16">
-      <div className="mx-auto max-w-7xl">
+    <section className="bg-[#151515] py-16 md:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <p className="text-xs uppercase tracking-widest text-[#C5A46D]">DISCOVER OUR EXPERTISE</p>
-        <h2 className="mt-2 font-heading text-3xl font-semibold text-[#151515]">Explore Our Services</h2>
+        <h2 className="mt-2 font-heading text-3xl font-semibold text-[#F7F5F0]">Explore Our Services</h2>
         <div className="mt-2 h-px w-12 bg-[#C5A46D]" />
         <p className="mt-4 max-w-2xl text-[#77736D]">
           From precision cuts to premium grooming, discover the perfect service for your style.

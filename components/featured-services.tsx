@@ -53,8 +53,8 @@ export function FeaturedServices() {
   }, [])
 
   return (
-    <section className="bg-[#151515] px-4 py-16">
-      <div className="mx-auto max-w-7xl text-center">
+    <section className="bg-[#151515] py-12 md:py-16 lg:py-20">
+      <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
         <p className="text-sm font-medium uppercase tracking-widest text-[#C5A46D]">
           OUR PREMIUM SERVICES
         </p>
