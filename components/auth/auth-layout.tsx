@@ -23,28 +23,6 @@ function AuthLayout({
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(197,164,109,0.12),transparent_55%)] lg:hidden"
       />
 
-      {/* Salon imagery panel (desktop) */}
-      <div className="relative hidden lg:block">
-        <Image
-          src="/images/hero-barbershop.jpg"
-          alt=""
-          aria-hidden="true"
-          fill
-          sizes="50vw"
-          className="object-cover object-center"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 bg-gradient-to-t from-midnight via-midnight/30 to-midnight/50"
-        />
-        <div className="relative flex h-full flex-col justify-end p-10 xl:p-14">
-          <p className="font-heading text-3xl font-semibold leading-snug text-ivory">
-            LOOK SHARP.{" "}
-            <span className="text-gold">FEEL CONFIDENT.</span>
-          </p>
-        </div>
-      </div>
-
       {/* Form panel */}
       <div className="relative flex items-center justify-center p-4 py-12 sm:px-6 lg:p-10">
         <div className="w-full max-w-md rounded-2xl border border-champagne bg-white p-6 shadow-xl shadow-black/30 sm:p-8">
@@ -79,6 +57,28 @@ function AuthLayout({
           <div className="mt-6 text-center text-sm text-muted-gray">
             {footer}
           </div>
+        </div>
+      </div>
+
+      {/* Salon imagery panel (desktop) */}
+      <div className="relative hidden lg:block">
+        <Image
+          src="/images/hero-barbershop.jpg"
+          alt=""
+          aria-hidden="true"
+          fill
+          sizes="50vw"
+          className="object-cover object-center"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-gradient-to-t from-midnight via-midnight/30 to-midnight/50"
+        />
+        <div className="relative flex h-full flex-col justify-end p-10 xl:p-14">
+          <p className="font-heading text-3xl font-semibold leading-snug text-ivory">
+            LOOK SHARP.{" "}
+            <span className="text-gold">FEEL CONFIDENT.</span>
+          </p>
         </div>
       </div>
     </div>
