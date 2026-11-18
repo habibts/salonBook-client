@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { ServiceCard } from "@/components/service-card"
 
 interface Service {
   _id: string
@@ -151,29 +152,7 @@ export default function ServicesPage() {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((service) => (
-              <Card key={service._id} className="overflow-hidden border-dark-border bg-charcoal text-ivory">
-                <img
-                  src={service.image}
-                  alt={service.serviceName}
-                  className="h-48 w-full object-cover"
-                />
-                <CardHeader>
-                  <CardTitle className="font-heading text-ivory">{service.serviceName}</CardTitle>
-                  <Badge className="bg-gold/10 text-gold">{service.category}</Badge>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-[#A7A39C]">{service.description}</p>
-                  <div className="mt-3 flex items-center justify-between text-sm">
-                    <span className="font-semibold text-gold">${service.price}</span>
-                    <span>{service.duration} min</span>
-                  </div>
-                </CardContent>
-                <CardFooter>
-                  <Button className="w-full bg-gold text-midnight hover:bg-gold-hover">
-                    <Link href={`/services/${service._id}`}>View Details</Link>
-                  </Button>
-                </CardFooter>
-              </Card>
+              <ServiceCard key={service._id} service={service} />
             ))}
           </div>
         )}
