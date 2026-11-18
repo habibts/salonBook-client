@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { authClient } from "@/lib/auth-client"
+import { ServiceCard } from "@/components/service-card"
 
 interface Service {
   _id: string
@@ -31,37 +32,48 @@ export default function ServiceDetailsPage() {
   const user = session?.user as { role?: string } | null
 
   const [service, setService] = useState<Service | null>(null)
+  const [allServices, setAllServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-
-  async function fetchServices(signal?: AbortSignal) {
-    setLoading(true)
-    setError(null)
-    setService(null)
-    try {
-      const res = await fetch(`${API_BASE}/services`, { signal, cache: "no-store" })
-      if (!res.ok) throw new Error("Failed to fetch services")
-      const data = (await res.json()) as Service[]
-      if (signal?.aborted) return
-      const found = data.find((s) => s._id === id) ?? null
-      if (!found) setError("Service not found")
-      else setService(found)
-    } catch (e) {
-      if (signal?.aborted) return
-      setError(e instanceof Error ? e.message : "Something went wrong")
-    } finally {
-      if (!signal?.aborted) setLoading(false)
-    }
-  }
+  const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
-    if (id) fetchServices(controller.signal)
+    setLoading(true)
+    setError(null)
+    setService(null)
+    setAllServices([])
+
+    async function fetchServices() {
+      try {
+        const res = await fetch(`${API_BASE}/services`, {
+          signal: controller.signal,
+          cache: "no-store",
+        })
+        if (!res.ok) throw new Error("Failed to fetch services")
+        const data = (await res.json()) as Service[]
+        if (controller.signal.aborted) return
+        setAllServices(data)
+        const found = data.find((s) => s._id === id) ?? null
+        if (!found) setError("Service not found")
+        else setService(found)
+      } catch (e) {
+        if (controller.signal.aborted) return
+        setError(e instanceof Error ? e.message : "Something went wrong")
+      } finally {
+        if (!controller.signal.aborted) setLoading(false)
+      }
+    }
+
+    if (id) fetchServices()
     return () => controller.abort()
-  }, [id])
+  }, [id, retryKey])
 
   const isAdmin = user?.role === "admin"
   const isActive = service?.status === "active"
+  const related = allServices
+    .filter((s) => s.status === "active" && s._id !== id)
+    .slice(0, 3)
 
   function handleBook() {
     if (!session) {
@@ -69,6 +81,7 @@ export default function ServiceDetailsPage() {
       return
     }
     if (isAdmin) return
+    router.push(`/book-appointment?serviceId=${id}`)
   }
 
   if (loading) {
@@ -83,7 +96,7 @@ export default function ServiceDetailsPage() {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
         <p className="text-red-500">{error ?? "Service not found"}</p>
-        <Button onClick={() => fetchServices()} className="mt-4">
+        <Button onClick={() => setRetryKey((k) => k + 1)} className="mt-4">
           Retry
         </Button>
       </div>
@@ -92,7 +105,7 @@ export default function ServiceDetailsPage() {
 
   return (
     <div className="bg-[#F7F5F0]">
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <nav className="mb-6 text-sm text-[#77736D]">
           <Link href="/" className="hover:text-[#C5A46D]">Home</Link>
           {" / "}
@@ -102,7 +115,7 @@ export default function ServiceDetailsPage() {
         </nav>
 
         <section>
-          <img src={service.image} alt={service.serviceName} className="aspect-[16/7] w-full rounded-2xl object-cover" />
+          <img src={service.image} alt={service.serviceName} className="aspect-[16/7] w-full rounded-2xl object-cover object-[center_25%]" />
           <div className="mt-6 rounded-2xl bg-[#292929] p-8 text-[#F7F5F0]">
             <p className="text-xs uppercase tracking-widest text-[#C5A46D]">SALONBOOK PREMIUM SERVICE</p>
             <span className="mt-3 inline-block rounded-full bg-[#C5A46D]/10 px-3 py-1 text-sm text-[#C5A46D]">{service.category}</span>
@@ -155,13 +168,24 @@ export default function ServiceDetailsPage() {
           </div>
         </section>
 
+        {related.length > 0 && (
+          <section className="mt-12">
+            <h2 className="font-heading text-2xl font-semibold text-[#151515]">Related Services</h2>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {related.map((s) => (
+                <ServiceCard key={s._id} service={s} />
+              ))}
+            </div>
+          </section>
+        )}
+
         <section className="mt-12 rounded-2xl bg-[#151515] px-6 py-12 text-center">
           <h2 className="font-heading text-2xl font-semibold text-[#F7F5F0]">Ready for a Fresh Look?</h2>
           <p className="mt-2 text-[#C7C2B9]">Book your next grooming experience with SalonBook.</p>
           <Button
             className="mt-6 bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]"
-            onClick={handleBook}
             disabled={isAdmin || !isActive}
+            onClick={handleBook}
           >
             Book Your Appointment
           </Button>

@@ -1,12 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
+import { Suspense, useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import { Search } from "lucide-react"
 
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -16,9 +14,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSearchParams } from "next/navigation"
-import { Suspense } from "react"
-import { cn } from "@/lib/utils"
 import { ServiceCard } from "@/components/service-card"
 
 interface Service {
@@ -34,12 +29,12 @@ interface Service {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 
-export function ServicesPageContent() {
+function ServicesPageContent() {
+  const searchParams = useSearchParams()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const searchParams = useSearchParams()
   const [category, setCategory] = useState(searchParams.get("category") ?? "all")
   const [sort, setSort] = useState("none")
 
@@ -47,7 +42,7 @@ export function ServicesPageContent() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/services`)
+      const res = await fetch(`${API_BASE}/services`, { cache: "no-store" })
       if (!res.ok) throw new Error("Failed to fetch services")
       const data = (await res.json()) as Service[]
       setServices(data)
@@ -82,54 +77,37 @@ export function ServicesPageContent() {
     return list
   }, [activeServices, search, category, sort])
 
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-80 w-full" />
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className="text-red-500">{error}</p>
-        <Button onClick={fetchServices} className="mt-4">
-          Retry
-        </Button>
-      </div>
-    )
-  }
-
-  if (activeServices.length === 0) {
-    return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p>No services available.</p>
-      </div>
-    )
+  function clearFilters() {
+    setSearch("")
+    setCategory("all")
+    setSort("none")
   }
 
   return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex flex-col gap-4 md:flex-row">
+    <div className="bg-[#F7F5F0] py-12 md:py-16 lg:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h1 className="font-heading text-3xl font-semibold text-[#151515] sm:text-4xl">
+          Explore Our Services
+        </h1>
+        <p className="mt-2 max-w-2xl text-[#77736D]">
+          Discover premium grooming services tailored to your style.
+        </p>
+
+        <div className="mt-6 flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 size-4 text-[#A7A39C]" />
+            <Search className="absolute left-3 top-3 size-4 text-[#77736D]" />
             <Input
               placeholder="Search services..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border-dark-border bg-charcoal pl-9 text-ivory placeholder:text-[#A7A39C]"
+              className="border-[#E9E3D8] bg-white pl-9 text-[#151515]"
             />
           </div>
           <Select value={category} onValueChange={(v) => setCategory(v ?? "all")}>
-            <SelectTrigger className="w-full border-dark-border bg-charcoal text-ivory md:w-48">
+            <SelectTrigger className="w-full border-[#E9E3D8] bg-white text-[#151515] md:w-48">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
-            <SelectContent className="border-dark-border bg-charcoal text-ivory">
+            <SelectContent className="border-[#E9E3D8] bg-white text-[#151515]">
               <SelectItem value="all">All Categories</SelectItem>
               {categories.map((c) => (
                 <SelectItem key={c} value={c}>
@@ -139,27 +117,48 @@ export function ServicesPageContent() {
             </SelectContent>
           </Select>
           <Select value={sort} onValueChange={(v) => setSort(v ?? "none")}>
-            <SelectTrigger className="w-full border-dark-border bg-charcoal text-ivory md:w-48">
+            <SelectTrigger className="w-full border-[#E9E3D8] bg-white text-[#151515] md:w-48">
               <SelectValue placeholder="Sort by price" />
             </SelectTrigger>
-            <SelectContent className="border-dark-border bg-charcoal text-ivory">
+            <SelectContent className="border-[#E9E3D8] bg-white text-[#151515]">
               <SelectItem value="none">Default</SelectItem>
-              <SelectItem value="low">Low to High</SelectItem>
-              <SelectItem value="high">High to Low</SelectItem>
+              <SelectItem value="low">Price: Low to High</SelectItem>
+              <SelectItem value="high">Price: High to Low</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" onClick={clearFilters} className="border-[#E9E3D8]">
+            Clear Filters
+          </Button>
         </div>
 
-        {filtered.length === 0 ? (
-          <p className="text-center text-[#A7A39C]">No search results found.</p>
+        {!loading && !error && (
+          <p className="mt-4 text-sm text-[#77736D]">{filtered.length} services found</p>
+        )}
+
+        {loading ? (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-80 w-full" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="mt-6 text-center">
+            <p className="text-red-500">{error}</p>
+            <Button onClick={fetchServices} className="mt-4">
+              Retry
+            </Button>
+          </div>
+        ) : filtered.length === 0 ? (
+          <p className="mt-6 text-center text-[#77736D]">No services found. Try adjusting filters.</p>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((service) => (
               <ServiceCard key={service._id} service={service} />
             ))}
           </div>
         )}
       </div>
+    </div>
   )
 }
 
