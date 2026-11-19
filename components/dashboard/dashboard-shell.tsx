@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState, type ReactNode } from "react"
+import { useEffect, useState, type ReactNode } from "react"
 import {
   CalendarDays,
   ClipboardList,
@@ -20,14 +20,6 @@ import {
 } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Toaster, toast } from "@/components/ui/toast"
 import { authClient } from "@/lib/auth-client"
 import type { DashboardRole } from "@/lib/roles"
@@ -109,8 +101,6 @@ function SidebarContent({
   const pathname = usePathname()
   const items = getNavItems(role)
   const active = matchNavItem(pathname, items)
-  const { data: session } = authClient.useSession()
-  const user = session?.user ?? null
 
   const labelClass = hideLabelsUntilLg ? "hidden lg:block" : "block"
   const linkJustify = hideLabelsUntilLg
@@ -120,22 +110,27 @@ function SidebarContent({
   return (
     <>
       {/* Brand */}
-      <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-dark-border px-3 lg:px-4">
+      <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b border-dark-border px-4">
         <Link
           href="/"
           aria-label="SalonBook — Home"
           className="flex min-w-0 items-center gap-2.5 outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
         >
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gold font-heading text-base font-semibold text-midnight">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gold font-heading text-base font-semibold text-midnight transition-transform duration-300 hover:scale-105">
             S
           </span>
           <span
             className={cn(
-              "truncate font-heading text-lg font-semibold tracking-wide text-gold",
-              labelClass
+              "min-w-0 flex-col",
+              hideLabelsUntilLg ? "hidden lg:flex" : "flex"
             )}
           >
-            SalonBook
+            <span className="truncate font-heading text-lg leading-none font-semibold tracking-wide text-gold">
+              SalonBook
+            </span>
+            <span className="mt-1.5 text-[9px] font-semibold tracking-[0.28em] text-[#8A857D] uppercase">
+              Dashboard
+            </span>
           </span>
         </Link>
         {onClose && (
@@ -143,7 +138,7 @@ function SidebarContent({
             type="button"
             onClick={onClose}
             aria-label="Close navigation menu"
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[#A7A39C] transition-colors hover:bg-ivory/10 hover:text-gold"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[#A9A49C] transition-colors hover:bg-white/5 hover:text-gold"
           >
             <X className="size-5" />
           </button>
@@ -153,8 +148,17 @@ function SidebarContent({
       {/* Role-based navigation */}
       <nav
         aria-label={role === "admin" ? "Admin navigation" : "Customer navigation"}
-        className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3"
+        className="sb-scroll flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3"
       >
+        <p
+          className={cn(
+            "px-3 pt-2 pb-1.5 text-[10px] font-semibold tracking-[0.22em] text-[#8A857D] uppercase",
+            labelClass
+          )}
+        >
+          Menu
+        </p>
+
         {items.map((item) => {
           const isActive = active?.href === item.href
           return (
@@ -165,14 +169,26 @@ function SidebarContent({
               aria-current={isActive ? "page" : undefined}
               title={hideLabelsUntilLg ? item.label : undefined}
               className={cn(
-                "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-gold/60",
+                "relative flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-gold/60",
                 linkJustify,
                 isActive
-                  ? "bg-gold/10 text-gold"
-                  : "text-[#A7A39C] hover:bg-ivory/5 hover:text-ivory"
+                  ? "bg-gold/15 text-gold shadow-[inset_0_0_0_1px_rgba(184,149,90,0.28)]"
+                  : "text-[#A9A49C] hover:bg-white/[0.04] hover:text-ivory"
               )}
             >
-              <item.icon className="size-5 shrink-0" aria-hidden="true" />
+              {isActive && (
+                <span
+                  aria-hidden="true"
+                  className="absolute top-1/2 left-0 h-5 w-1 -translate-y-1/2 rounded-r-full bg-gold"
+                />
+              )}
+              <item.icon
+                className={cn(
+                  "size-5 shrink-0 transition-colors duration-200",
+                  isActive ? "text-gold" : "text-[#8A857D]"
+                )}
+                aria-hidden="true"
+              />
               <span className={cn("truncate", labelClass)}>{item.label}</span>
             </Link>
           )
@@ -185,7 +201,7 @@ function SidebarContent({
           href="/"
           onClick={onClose}
           className={cn(
-            "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium text-[#A7A39C] transition-colors outline-none hover:bg-ivory/5 hover:text-ivory focus-visible:ring-2 focus-visible:ring-gold/60",
+            "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium text-[#A9A49C] transition-colors duration-200 outline-none hover:bg-white/[0.04] hover:text-ivory focus-visible:ring-2 focus-visible:ring-gold/60",
             linkJustify
           )}
         >
@@ -197,7 +213,7 @@ function SidebarContent({
           onClick={onLogout}
           disabled={loggingOut}
           className={cn(
-            "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium text-[#A7A39C] transition-colors outline-none hover:bg-ivory/5 hover:text-gold focus-visible:ring-2 focus-visible:ring-gold/60 disabled:opacity-60",
+            "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium text-[#A9A49C] transition-colors duration-200 outline-none hover:bg-gold/10 hover:text-gold focus-visible:ring-2 focus-visible:ring-gold/60 disabled:opacity-60",
             linkJustify
           )}
         >
@@ -217,9 +233,9 @@ interface DashboardShellProps {
 }
 
 /**
- * Shared dashboard chrome: responsive sidebar (icon rail on tablet, drawer on
- * mobile), sticky header with the page title and the signed-in user, and the
- * toast viewport used by every dashboard page.
+ * Shared dashboard chrome: a Midnight sidebar with Champagne Gold accents
+ * (icon rail on tablet, drawer on mobile), a sticky topbar with the signed-in
+ * user, and the toast viewport used by every dashboard page.
  *
  * The role is resolved from the authenticated session in the route layout that
  * renders this shell — the sidebar only reflects what the server already
@@ -227,16 +243,27 @@ interface DashboardShellProps {
  */
 function DashboardShell({ role, children }: DashboardShellProps) {
   const router = useRouter()
-  const pathname = usePathname()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
 
   const { data: session, isPending } = authClient.useSession()
   const user = session?.user ?? null
 
-  const items = getNavItems(role)
-  const active = matchNavItem(pathname, items)
-  const title = active?.label ?? (role === "admin" ? "Admin Dashboard" : "Customer Dashboard")
+  useEffect(() => {
+    if (!drawerOpen) return
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setDrawerOpen(false)
+    }
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    window.addEventListener("keydown", onKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener("keydown", onKeyDown)
+    }
+  }, [drawerOpen])
 
   async function handleLogout() {
     if (loggingOut) return
@@ -270,11 +297,11 @@ function DashboardShell({ role, children }: DashboardShellProps) {
   }
 
   return (
-    <div className="flex min-h-svh w-full bg-ivory text-midnight">
+    <div className="flex min-h-svh w-full bg-background text-foreground">
       {/* Desktop sidebar — icon rail from `md`, full sidebar from `lg` */}
       <aside
         aria-label="Dashboard sidebar"
-        className="sticky top-0 hidden h-svh shrink-0 flex-col self-start border-r border-dark-border bg-midnight md:flex md:w-16 lg:w-64"
+        className="sticky top-0 hidden h-svh shrink-0 flex-col self-start border-r border-dark-border bg-sidebar md:flex md:w-16 lg:w-64"
       >
         <SidebarContent
           role={role}
@@ -286,6 +313,58 @@ function DashboardShell({ role, children }: DashboardShellProps) {
 
       {/* Main column */}
       <div className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
+          <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setDrawerOpen(true)}
+                aria-controls="dashboard-drawer"
+                aria-expanded={drawerOpen}
+                aria-label="Open navigation menu"
+                className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card text-foreground transition-colors duration-200 hover:border-gold/60 hover:text-gold focus-visible:ring-2 focus-visible:ring-gold/50 md:hidden"
+              >
+                <Menu className="size-5" aria-hidden="true" />
+              </button>
+
+              <Link
+                href="/"
+                aria-label="SalonBook — Home"
+                className="flex items-center gap-2.5 md:hidden"
+              >
+                <span className="flex size-9 items-center justify-center rounded-lg bg-gold font-heading text-base font-semibold text-midnight">
+                  S
+                </span>
+                <span className="font-heading text-lg font-semibold tracking-wide text-foreground">
+                  SalonBook
+                </span>
+              </Link>
+
+              <span className="hidden items-center gap-2.5 text-[11px] font-semibold tracking-[0.22em] text-muted-foreground uppercase md:flex">
+                <span aria-hidden="true" className="size-1.5 rotate-45 bg-gold" />
+                SalonBook Dashboard
+              </span>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2.5">
+              <span className="hidden rounded-full border border-gold/40 bg-gold/10 px-3 py-1 text-[11px] font-semibold tracking-[0.14em] text-gold uppercase sm:inline-flex">
+                {role === "admin" ? "Admin" : "Member"}
+              </span>
+              <div className="flex items-center gap-2.5 rounded-full border border-border bg-card py-1 pr-3 pl-1">
+                <Avatar className="size-8 ring-1 ring-gold/40">
+                  {user?.image ? <AvatarImage src={user.image} alt="" /> : null}
+                  <AvatarFallback className="bg-charcoal text-[11px] font-semibold text-gold">
+                    {getInitials(user?.name ?? "")}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="hidden max-w-[9rem] truncate text-sm font-medium text-foreground sm:block">
+                  {isPending ? "…" : (user?.name ?? "Guest")}
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
+
         <main className="flex min-w-0 flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </main>
@@ -304,9 +383,9 @@ function DashboardShell({ role, children }: DashboardShellProps) {
             type="button"
             aria-label="Close navigation menu"
             onClick={() => setDrawerOpen(false)}
-            className="absolute inset-0 bg-black/60"
+            className="animate-fade absolute inset-0 bg-midnight/70 backdrop-blur-[2px]"
           />
-          <div className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-midnight shadow-2xl shadow-black/40">
+          <div className="animate-drawer absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-sidebar shadow-[8px_0_48px_-16px_rgba(0,0,0,0.7)]">
             <SidebarContent
               role={role}
               onClose={() => setDrawerOpen(false)}

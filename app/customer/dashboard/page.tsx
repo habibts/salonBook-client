@@ -1,11 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
-import { CalendarDays, CheckCircle2, Clock, XCircle } from "lucide-react"
+import { useRouter } from "next/navigation"
+import {
+  ArrowRight,
+  BadgeCheck,
+  CalendarCheck,
+  CalendarDays,
+  Clock,
+  Scissors,
+} from "lucide-react"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { StatCard, type StatTone } from "@/components/dashboard/stat-card"
+import { StatusBadge } from "@/components/dashboard/status-badge"
 import { authClient } from "@/lib/auth-client"
 
 interface Appointment {
@@ -23,6 +34,7 @@ interface Appointment {
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 
 export default function CustomerDashboardPage() {
+  const router = useRouter()
   const { data: session } = authClient.useSession()
   const user = session?.user
   const [appointments, setAppointments] = useState<Appointment[]>([])
@@ -47,47 +59,123 @@ export default function CustomerDashboardPage() {
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
 
-  const cards = [
-    { title: "Total Appointments", value: total, icon: CalendarDays },
-    { title: "Pending Appointments", value: pending, icon: Clock },
-    { title: "Confirmed Appointments", value: confirmed, icon: CheckCircle2 },
-    { title: "Completed Appointments", value: completed, icon: XCircle },
+  const cards: {
+    title: string
+    value: number
+    icon: typeof CalendarDays
+    tone: StatTone
+    hint: string
+  }[] = [
+    { title: "Total Appointments", value: total, icon: CalendarDays, tone: "gold", hint: "Bookings on your account" },
+    { title: "Pending", value: pending, icon: Clock, tone: "amber", hint: "Awaiting confirmation" },
+    { title: "Confirmed", value: confirmed, icon: CalendarCheck, tone: "blue", hint: "Ready to be welcomed in" },
+    { title: "Completed", value: completed, icon: BadgeCheck, tone: "green", hint: "Visits already enjoyed" },
   ]
+
+  const firstName = user?.name?.split(" ")[0]
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {cards.map((c) => (
-          <Card key={c.title} className="border-[#3A3834] bg-[#292929] text-[#F7F5F0]">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-sm font-medium text-[#C7C2B9]">{c.title}</CardTitle>
-              <c.icon className="size-5 text-[#C5A46D]" />
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">{loading ? "..." : c.value}</p>
-            </CardContent>
-          </Card>
+      <PageHeader
+        eyebrow="My SalonBook"
+        title={firstName ? `Welcome back, ${firstName}` : "Your Dashboard"}
+        description="Track your appointments, see what is coming up and manage every visit in one place."
+        action={
+          <Button onClick={() => router.push("/book-appointment")}>
+            Book Appointment
+            <ArrowRight className="ml-1 size-4" aria-hidden="true" />
+          </Button>
+        }
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {cards.map((c, i) => (
+          <StatCard
+            key={c.title}
+            label={c.title}
+            value={loading ? "…" : c.value}
+            icon={c.icon}
+            tone={c.tone}
+            hint={c.hint}
+            order={i}
+          />
         ))}
       </div>
 
-      <Card className="border-[#3A3834] bg-[#292929] text-[#F7F5F0]">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Appointments</CardTitle>
-          <Button onClick={() => (window.location.href = "/customer/appointments")} className="bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]">
+      <Card className="animate-rise">
+        <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-border pb-4">
+          <div>
+            <CardTitle className="text-lg">Recent Appointments</CardTitle>
+            <CardDescription>Your latest booking activity</CardDescription>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => router.push("/customer/appointments")}
+          >
             View All
+            <ArrowRight className="ml-1 size-4" aria-hidden="true" />
           </Button>
         </CardHeader>
-        <CardContent>
+
+        <CardContent className="pt-4">
           {loading ? (
-            <p>Loading...</p>
+            <ul className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <li key={i}>
+                  <Skeleton className="h-14 w-full rounded-lg" />
+                </li>
+              ))}
+            </ul>
           ) : recent.length === 0 ? (
-            <p className="text-[#C7C2B9]">No appointments yet.</p>
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/60 px-6 py-10 text-center">
+              <span className="flex size-12 items-center justify-center rounded-full bg-gold/10 text-gold">
+                <Scissors className="size-5" aria-hidden="true" />
+              </span>
+              <div>
+                <p className="font-heading text-base font-medium text-foreground">
+                  No appointments yet
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  When you book a service, it will appear here.
+                </p>
+              </div>
+              <Button
+                onClick={() => router.push("/book-appointment")}
+                className="mt-1"
+              >
+                Book your first visit
+              </Button>
+            </div>
           ) : (
             <ul className="space-y-2">
               {recent.map((a) => (
-                <li key={a._id} className="flex items-center justify-between border-b border-[#3A3834] pb-2">
-                  <span>{a.serviceName}</span>
-                  <span className="text-sm text-[#C7C2B9]">{a.appointmentDate} {a.appointmentTime}</span>
+                <li
+                  key={a._id}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-3 transition-colors duration-200 hover:border-border hover:bg-background/70"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span
+                      aria-hidden="true"
+                      className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gold/10 text-gold"
+                    >
+                      <CalendarDays className="size-4" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {a.serviceName}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {a.appointmentDate} · {a.appointmentTime}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-foreground tabular-nums">
+                      ${a.servicePrice}
+                    </span>
+                    <StatusBadge status={a.status} />
+                  </div>
                 </li>
               ))}
             </ul>

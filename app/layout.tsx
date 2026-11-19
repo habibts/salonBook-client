@@ -1,8 +1,7 @@
 import { Inter, Playfair_Display } from "next/font/google"
 
 import "./globals.css"
-import { Footer } from "@/components/footer"
-import { Navbar } from "@/components/navbar"
+import { SiteFooter, SiteHeader } from "@/components/site-chrome"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
@@ -37,9 +36,9 @@ export default function RootLayout({
       )}
     >
       <body>
-        <Navbar />
+        <SiteHeader />
         <ThemeProvider>{children}</ThemeProvider>
-        <Footer />
+        <SiteFooter />
       </body>
     </html>
   )

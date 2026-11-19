@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Toaster, toast } from "@/components/ui/toast"
+import { PageHeader } from "@/components/dashboard/page-header"
+import { StatCard } from "@/components/dashboard/stat-card"
+import { StatusBadge } from "@/components/dashboard/status-badge"
+import { ShieldCheck, UserCheck, UserRound, Users, UserX } from "lucide-react"
 
 interface User {
   _id: string
@@ -115,61 +118,85 @@ export default function ManageUsersPage() {
     return true
   }
 
-  return (
-    <div className="container mx-auto max-w-7xl px-4 py-8">
-      <Toaster />
-      <h1 className="font-heading text-3xl font-semibold text-[#151515]">Manage Users</h1>
-      <p className="text-[#77736D]">Manage customer accounts, monitor user activity, and control access.</p>
+  const stats = [
+    { label: "Total Users", value: total, icon: Users, tone: "gold" as const },
+    { label: "Active", value: active, icon: UserCheck, tone: "green" as const },
+    { label: "Blocked", value: blocked, icon: UserX, tone: "red" as const },
+    { label: "Customers", value: customers, icon: UserRound, tone: "blue" as const },
+    { label: "Admins", value: admins, icon: ShieldCheck, tone: "sage" as const },
+  ]
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {[
-          { label: "Total Users", value: total },
-          { label: "Active Users", value: active },
-          { label: "Blocked Users", value: blocked },
-          { label: "Customers", value: customers },
-          { label: "Admins", value: admins },
-        ].map((c) => (
-          <div key={c.label} className="rounded-xl border border-[#E9E3D8] bg-white p-4">
-            <p className="text-sm text-[#77736D]">{c.label}</p>
-            <p className="text-2xl font-semibold text-[#151515]">{c.value}</p>
-          </div>
+  return (
+    <div className="space-y-6">
+      <Toaster />
+
+      <PageHeader
+        eyebrow="People"
+        title="Manage Users"
+        description="Manage customer accounts, monitor user activity, and control access."
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {stats.map((c, i) => (
+          <StatCard
+            key={c.label}
+            label={c.label}
+            value={loading ? "…" : c.value}
+            icon={c.icon}
+            tone={c.tone}
+            order={i}
+          />
         ))}
       </div>
 
-      <div className="mt-6 flex flex-col gap-4 md:flex-row">
-        <Input placeholder="Search by name or email..." value={search} onChange={(e) => setSearch(e.target.value)} className="border-[#E9E3D8] bg-white" />
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 md:flex-row md:items-center">
+        <Input
+          placeholder="Search by name or email..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="md:flex-1"
+        />
         <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v ?? "all")}>
-          <SelectTrigger className="w-full md:w-48 border-[#E9E3D8] bg-white"><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent className="border-[#E9E3D8] bg-white">
+          <SelectTrigger className="w-full md:w-48">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
             <SelectItem value="all">All</SelectItem>
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="blocked">Blocked</SelectItem>
           </SelectContent>
         </Select>
         <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v ?? "all")}>
-          <SelectTrigger className="w-full md:w-48 border-[#E9E3D8] bg-white"><SelectValue placeholder="Role" /></SelectTrigger>
-          <SelectContent className="border-[#E9E3D8] bg-white">
+          <SelectTrigger className="w-full md:w-48">
+            <SelectValue placeholder="Role" />
+          </SelectTrigger>
+          <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
             <SelectItem value="customer">Customer</SelectItem>
             <SelectItem value="admin">Admin</SelectItem>
           </SelectContent>
         </Select>
-        <Button variant="outline" onClick={() => { setSearch(""); setStatusFilter("all"); setRoleFilter("all") }} className="border-[#E9E3D8]">
+        <Button
+          variant="outline"
+          onClick={() => { setSearch(""); setStatusFilter("all"); setRoleFilter("all") }}
+        >
           Clear Filters
         </Button>
       </div>
 
       {loading ? (
-        <Skeleton className="mt-6 h-64 w-full" />
+        <Skeleton className="h-64 w-full rounded-xl" />
       ) : error ? (
-        <div className="mt-6 text-center">
-          <p className="text-red-500">{error}</p>
+        <div className="rounded-xl border border-border bg-card px-6 py-10 text-center">
+          <p className="text-sm text-destructive">{error}</p>
           <Button onClick={fetchUsers} className="mt-4">Retry</Button>
         </div>
       ) : paged.length === 0 ? (
-        <p className="mt-6 text-center text-[#77736D]">No users found.</p>
+        <p className="rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
+          No users found.
+        </p>
       ) : (
-        <div className="mt-6 overflow-x-auto rounded-xl border border-[#E9E3D8] bg-white">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card surface-raised">
           <Table>
             <TableHeader>
               <TableRow>
@@ -184,61 +211,87 @@ export default function ManageUsersPage() {
             <TableBody>
               {paged.map((u) => (
                 <TableRow key={u._id}>
-                  <TableCell className="flex items-center gap-2">
-                    <Avatar>
-                      {u.image ? <AvatarImage src={u.image} /> : null}
-                      <AvatarFallback>{getInitials(u.name)}</AvatarFallback>
-                    </Avatar>
-                    <span>{u.name}</span>
-                  </TableCell>
-                  <TableCell>{u.email}</TableCell>
-                  <TableCell>{u.role ?? "customer"}</TableCell>
-                  <TableCell>{u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}</TableCell>
                   <TableCell>
-                    <Badge className={(u.status ?? "active") === "active" ? "bg-[#E6F3E9] text-[#287A45]" : "bg-[#FCE9E8] text-[#B84040]"}>
-                      {u.status ?? "active"}
-                    </Badge>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="size-9 ring-1 ring-border">
+                        {u.image ? <AvatarImage src={u.image} /> : null}
+                        <AvatarFallback className="bg-secondary text-[11px] font-semibold text-secondary-foreground">
+                          {getInitials(u.name)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium text-foreground">{u.name}</span>
+                    </div>
                   </TableCell>
-                  <TableCell className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => setSelected(u)} className="border-[#E9E3D8]">View</Button>
-                    {canModify(u) && (
-                      <>
-                        {(u.status ?? "active") === "active" ? (
+                  <TableCell className="text-muted-foreground">{u.email}</TableCell>
+                  <TableCell>
+                    <span
+                      className={
+                        (u.role ?? "customer") === "admin"
+                          ? "rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-gold uppercase"
+                          : "rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-semibold tracking-[0.08em] text-muted-foreground uppercase"
+                      }
+                    >
+                      {u.role ?? "customer"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {u.createdAt ? new Date(u.createdAt).toLocaleDateString() : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge status={(u.status ?? "active") === "active" ? "Active" : "Blocked"} />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setSelected(u)}>
+                        View
+                      </Button>
+                      {canModify(u) && (
+                        <>
+                          {(u.status ?? "active") === "active" ? (
+                            <AlertDialog>
+                              <AlertDialogTrigger>
+                                <Button size="sm" variant="destructive">Block</Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Block User?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This user will no longer be able to access their account.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => updateStatus(u._id, "blocked")}>
+                                    Confirm Block
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          ) : (
+                            <Button size="sm" onClick={() => updateStatus(u._id, "active")}>
+                              Unblock
+                            </Button>
+                          )}
                           <AlertDialog>
                             <AlertDialogTrigger>
-                              <Button size="sm" className="bg-yellow-500 text-white hover:bg-yellow-600">Block</Button>
+                              <Button size="sm" variant="destructive">Delete</Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Block User?</AlertDialogTitle>
-                                <AlertDialogDescription>This user will no longer be able to access their account.</AlertDialogDescription>
+                                <AlertDialogTitle>Delete User?</AlertDialogTitle>
+                                <AlertDialogDescription>This action is permanent.</AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => updateStatus(u._id, "blocked")}>Confirm Block</AlertDialogAction>
+                                <AlertDialogAction onClick={() => deleteUser(u._id)}>
+                                  Delete
+                                </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
-                        ) : (
-                          <Button size="sm" onClick={() => updateStatus(u._id, "active")} className="bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]">Unblock</Button>
-                        )}
-                        <AlertDialog>
-                          <AlertDialogTrigger>
-                            <Button size="sm" className="bg-red-500 text-white hover:bg-red-600">Delete</Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete User?</AlertDialogTitle>
-                              <AlertDialogDescription>This action is permanent.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => deleteUser(u._id)}>Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </>
-                    )}
+                        </>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -247,26 +300,39 @@ export default function ManageUsersPage() {
         </div>
       )}
 
-      <div className="mt-4 flex items-center justify-between">
-        <Button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} variant="outline" className="border-[#E9E3D8]">Previous</Button>
-        <span className="text-sm text-[#77736D]">Page {page} of {totalPages}</span>
-        <Button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} variant="outline" className="border-[#E9E3D8]">Next</Button>
+      <div className="flex items-center justify-between gap-4">
+        <Button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} variant="outline">
+          Previous
+        </Button>
+        <span className="text-sm text-muted-foreground tabular-nums">
+          Page {page} of {totalPages}
+        </span>
+        <Button disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} variant="outline">
+          Next
+        </Button>
       </div>
 
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>User Details</DialogTitle>
+            <DialogTitle className="font-heading text-xl">User Details</DialogTitle>
           </DialogHeader>
           {selected && (
-            <div className="space-y-2 text-sm text-[#292929]">
-              <p><strong>Name:</strong> {selected.name}</p>
-              <p><strong>Email:</strong> {selected.email}</p>
-              <p><strong>Role:</strong> {selected.role ?? "customer"}</p>
-              <p><strong>Status:</strong> {selected.status ?? "active"}</p>
-              <p><strong>Joined:</strong> {selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : "—"}</p>
-              <p><strong>ID:</strong> {selected._id}</p>
-            </div>
+            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2.5 text-sm">
+              {[
+                ["Name", selected.name],
+                ["Email", selected.email],
+                ["Role", selected.role ?? "customer"],
+                ["Status", selected.status ?? "active"],
+                ["Joined", selected.createdAt ? new Date(selected.createdAt).toLocaleDateString() : "—"],
+                ["ID", selected._id],
+              ].map(([label, value]) => (
+                <div key={label} className="contents">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="font-medium break-words text-foreground">{value}</dd>
+                </div>
+              ))}
+            </dl>
           )}
         </DialogContent>
       </Dialog>
