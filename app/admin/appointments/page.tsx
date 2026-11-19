@@ -42,6 +42,21 @@ export default function AdminAppointmentsPage() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [selected, setSelected] = useState<Appointment | null>(null)
   const [toCancel, setToCancel] = useState<string | null>(null)
+  const [toConfirm, setToConfirm] = useState<string | null>(null)
+  const [confirming, setConfirming] = useState(false)
+
+  async function confirmAppointment(id: string) {
+    setConfirming(true)
+    const res = await fetch(`${API_BASE}/appointments/${id}/confirm`, { method: "PATCH" })
+    if (res.ok) {
+      toast.add({ type: "success", title: "Confirmed" })
+      fetchAppointments()
+    } else {
+      toast.add({ type: "error", title: "Confirm failed" })
+    }
+    setConfirming(false)
+    setToConfirm(null)
+  }
 
   async function fetchAppointments() {
     setLoading(true)
@@ -212,7 +227,24 @@ export default function AdminAppointmentsPage() {
                         View
                       </Button>
                       {a.status === "Pending" && (
-                        <AlertDialog>
+                        <>
+                          <AlertDialog>
+                            <AlertDialogTrigger>
+                              <Button size="sm" className="bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]">Confirm</Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Confirm Appointment?</AlertDialogTitle>
+                                <AlertDialogDescription>Confirm this appointment request.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction disabled={confirming} onClick={() => confirmAppointment(a._id)}>Confirm</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                          <AlertDialog>
+
                           <AlertDialogTrigger>
                             <Button size="sm" variant="destructive">
                               Cancel
@@ -233,6 +265,7 @@ export default function AdminAppointmentsPage() {
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
+                      </>
                       )}
                     </div>
                   </TableCell>
