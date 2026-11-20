@@ -148,7 +148,7 @@ export default function MyAppointmentsPage() {
                     </Button>
                   )}
                   {a.status === "Confirmed" && a.paymentStatus === "Unpaid" && (
-                    <Button>Pay Now</Button>
+                    <Button onClick={() => router.push(`/payment?appointmentId=${a._id}`)}>Pay Now</Button>
                   )}
                 </div>
                 <Button

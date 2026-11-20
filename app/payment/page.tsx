@@ -1,64 +1,682 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react"
 import { useSearchParams } from "next/navigation"
 import { loadStripe } from "@stripe/stripe-js"
-import { Elements, PaymentElement } from "@stripe/react-stripe-js"
-import { Lock } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Elements,
+  PaymentElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js"
+import {
+  ArrowLeft,
+  ArrowRight,
+  CalendarDays,
+  Check,
+  Clock,
+  Copy,
+  CreditCard,
+  Hash,
+  Lock,
+  Scissors,
+  TriangleAlert,
+  User,
+  type LucideIcon,
+} from "lucide-react"
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string)
+import { PageHeader } from "@/components/dashboard/page-header"
+import { StatusBadge } from "@/components/dashboard/status-badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Spinner } from "@/components/ui/spinner"
+import { cn } from "@/lib/utils"
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
+)
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 
-export function PaymentPageContent() {
+interface Appointment {
+  _id: string
+  serviceName: string
+  serviceImage?: string
+  customerName?: string
+  appointmentDate: string
+  appointmentTime?: string
+  /** Some records store the slot under `timeSlot` instead. */
+  timeSlot?: string
+  price: number
+  /** Optional breakdown — rendered only when the backend provides it. */
+  additionalCharges?: number
+  discount?: number
+  duration?: number
+  status: string
+  paymentStatus: string
+}
+
+/* ── Formatters ─────────────────────────────────────────────────────────── */
+
+function money(value: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value)
+}
+
+/** "2026-11-25" → "Tue, November 25, 2026" (timezone-safe for date-only values). */
+function formatDate(value?: string) {
+  if (!value) return "—"
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
+  const date = dateOnly
+    ? new Date(
+        Number(dateOnly[1]),
+        Number(dateOnly[2]) - 1,
+        Number(dateOnly[3])
+      )
+    : new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  })
+}
+
+/** "09:00" → "9:00 AM" */
+function formatTime(value?: string) {
+  if (!value) return "—"
+  const time = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(value.trim())
+  if (!time) return value
+  const hour = Number(time[1])
+  const suffix = hour >= 12 ? "PM" : "AM"
+  const hour12 = hour % 12 === 0 ? 12 : hour % 12
+  return `${hour12}:${time[2]} ${suffix}`
+}
+
+/* ── Small building blocks ──────────────────────────────────────────────── */
+
+/** Icon chip with an uppercase label + value — used in the booking card. */
+function DetailItem({
+  icon: Icon,
+  label,
+  value,
+  valueClassName,
+  children,
+  className,
+}: {
+  icon: LucideIcon
+  label: string
+  value: ReactNode
+  valueClassName?: string
+  children?: ReactNode
+  className?: string
+}) {
+  return (
+    <div className={cn("flex items-center gap-3", className)}>
+      <span
+        aria-hidden="true"
+        className="flex size-10 shrink-0 items-center justify-center rounded-full bg-background text-gold ring-1 ring-border"
+      >
+        <Icon className="size-4" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">
+          {label}
+        </p>
+        <p
+          className={cn(
+            "mt-0.5 text-sm font-medium break-words text-foreground",
+            valueClassName
+          )}
+        >
+          {value}
+        </p>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+/** Copies the booking reference with a gentle confirmation swap. */
+function CopyButton({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false)
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      window.setTimeout(() => setCopied(false), 2000)
+    } catch {
+      /* clipboard unavailable — nothing to show */
+    }
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon-sm"
+      aria-label="Copy booking reference"
+      onClick={handleCopy}
+      className="shrink-0 text-muted-foreground hover:text-gold"
+    >
+      {copied ? (
+        <Check className="text-[#657C67]" aria-hidden="true" />
+      ) : (
+        <Copy aria-hidden="true" />
+      )}
+    </Button>
+  )
+}
+
+function SummaryRow({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string
+  value: ReactNode
+  valueClassName?: string
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4">
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className={cn("text-sm font-medium text-foreground", valueClassName)}>
+        {value}
+      </p>
+    </div>
+  )
+}
+
+/**
+ * Sticky order-summary card — shared by both steps. The caller renders the
+ * call-to-action through `children` (Proceed to Checkout / Pay).
+ */
+function SummaryCard({
+  appointment,
+  total,
+  children,
+}: {
+  appointment: Appointment
+  total: number
+  children?: ReactNode
+}) {
+  const additionalCharges = appointment.additionalCharges ?? 0
+  const discount = appointment.discount ?? 0
+
+  return (
+    <Card className="rounded-2xl">
+      <CardContent className="flex flex-col gap-5 p-5 sm:p-6">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-heading text-lg font-semibold text-foreground">
+            Payment Summary
+          </h2>
+          <span className="rounded-full bg-gold/10 px-2.5 py-1 text-[10px] font-semibold tracking-[0.16em] text-gold uppercase">
+            Amount due
+          </span>
+        </div>
+
+        {/* Compact appointment recap */}
+        <div className="flex items-center gap-3 rounded-xl bg-background p-3">
+          {appointment.serviceImage ? (
+            <img
+              src={appointment.serviceImage}
+              alt={appointment.serviceName}
+              className="size-11 shrink-0 rounded-lg object-cover"
+            />
+          ) : (
+            <span
+              aria-hidden="true"
+              className="flex size-11 shrink-0 items-center justify-center rounded-lg text-gold"
+            >
+              <Scissors className="size-5" />
+            </span>
+          )}
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-foreground">
+              {appointment.serviceName}
+            </p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {formatDate(appointment.appointmentDate)} ·{" "}
+              {formatTime(appointment.appointmentTime ?? appointment.timeSlot)}
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <SummaryRow label="Service price" value={money(appointment.price)} />
+          {additionalCharges > 0 && (
+            <SummaryRow
+              label="Additional charges"
+              value={money(additionalCharges)}
+            />
+          )}
+          {discount > 0 && (
+            <SummaryRow
+              label="Discount"
+              value={`− ${money(discount)}`}
+              valueClassName="text-[#657C67]"
+            />
+          )}
+        </div>
+
+        <Separator />
+
+        <div className="flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+              Total
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Due today</p>
+          </div>
+          <p className="font-heading text-3xl font-semibold text-foreground">
+            {money(total)}
+          </p>
+        </div>
+
+        {children}
+
+        <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="size-3.5 text-gold" aria-hidden="true" />
+          Secure payment powered by Stripe
+        </p>
+      </CardContent>
+    </Card>
+  )
+}
+
+/* ── Step 2 — Stripe checkout ───────────────────────────────────────────── */
+
+function CheckoutForm({
+  appointment,
+  total,
+  onBack,
+}: {
+  appointment: Appointment
+  total: number
+  onBack: () => void
+}) {
+  const stripe = useStripe()
+  const elements = useElements()
+  const [processing, setProcessing] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [succeeded, setSucceeded] = useState(false)
+
+  async function handlePay() {
+    if (!stripe || !elements) return
+    setProcessing(true)
+    setMessage(null)
+    setSucceeded(false)
+    const result = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/payment/success`,
+      },
+      redirect: "if_required",
+    })
+    if (result.error) {
+      setMessage(result.error.message ?? "Payment failed")
+      setSucceeded(false)
+    } else if (
+      result.paymentIntent &&
+      result.paymentIntent.status === "succeeded"
+    ) {
+      setMessage("Payment submitted. Awaiting final confirmation.")
+      setSucceeded(true)
+    }
+    setProcessing(false)
+  }
+
+  return (
+    <>
+      {/* Left column — Stripe payment form */}
+      <div className="animate-rise space-y-5 lg:col-span-7">
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onBack}
+          disabled={processing}
+          className="-ml-2.5 self-start text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft aria-hidden="true" />
+          Back to summary
+        </Button>
+
+        <PageHeader
+          eyebrow="Secure checkout"
+          title="Complete Your Payment"
+          description="Enter your payment details below. Your card information is encrypted and processed securely by Stripe."
+        />
+
+        <Card className="rounded-2xl">
+          <CardContent className="p-5 sm:p-6">
+            <form
+              id="payment-form"
+              onSubmit={(e) => {
+                e.preventDefault()
+                void handlePay()
+              }}
+            >
+              <PaymentElement />
+            </form>
+            {message && (
+              <p
+                role={succeeded ? "status" : "alert"}
+                className={cn(
+                  "mt-4 rounded-xl border px-4 py-3 text-xs leading-relaxed",
+                  succeeded
+                    ? "border-[#CBDFCD] bg-[#E9F2EA] text-[#3C6B41]"
+                    : "border-[#F2CECC] bg-[#FBEAE8] text-[#B03A34]"
+                )}
+              >
+                {message}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right column — sticky summary with pay action */}
+      <div className="lg:col-span-5">
+        <div
+          className="animate-rise lg:sticky lg:top-24"
+          style={{ animationDelay: "80ms" }}
+        >
+          <SummaryCard appointment={appointment} total={total}>
+            <Button
+              type="button"
+              onClick={handlePay}
+              disabled={!stripe || processing}
+              className="h-11 w-full gap-2 rounded-xl bg-[#171717] px-5 text-sm font-semibold text-white hover:bg-[#34312D]"
+            >
+              {processing ? (
+                <>
+                  <Spinner aria-hidden="true" />
+                  Processing…
+                </>
+              ) : (
+                <>
+                  <CreditCard aria-hidden="true" />
+                  Pay {money(total)}
+                </>
+              )}
+            </Button>
+          </SummaryCard>
+        </div>
+      </div>
+    </>
+  )
+}
+
+/* ── Loading / error states ─────────────────────────────────────────────── */
+
+function PageSkeleton() {
+  return (
+    <div className="min-h-screen bg-background px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-12 lg:gap-8">
+        <div className="space-y-6 lg:col-span-7">
+          <div className="space-y-3">
+            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-9 w-72 max-w-full" />
+            <Skeleton className="h-4 w-96 max-w-full" />
+          </div>
+          <Skeleton className="h-72 w-full rounded-2xl" />
+        </div>
+        <div className="lg:col-span-5">
+          <Skeleton className="h-96 w-full rounded-2xl" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ErrorState({
+  error,
+  onRetry,
+}: {
+  error: string
+  onRetry?: () => void
+}) {
+  return (
+    <div className="min-h-screen bg-background px-4 py-16">
+      <Card className="mx-auto max-w-md rounded-2xl">
+        <CardContent className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+          <span className="flex size-12 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+            <TriangleAlert className="size-5" aria-hidden="true" />
+          </span>
+          <h1 className="font-heading text-xl font-semibold text-foreground">
+            Unable to load your booking
+          </h1>
+          <p className="max-w-xs text-sm break-words text-muted-foreground">
+            {error}
+          </p>
+          {onRetry && (
+            <Button
+              type="button"
+              onClick={onRetry}
+              className="mt-2 h-11 rounded-xl bg-[#171717] px-6 text-sm font-semibold text-white hover:bg-[#34312D]"
+            >
+              Try again
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+/* ── Page ───────────────────────────────────────────────────────────────── */
+
+function PaymentPageContent() {
   const params = useSearchParams()
   const appointmentId = params.get("appointmentId") ?? ""
-  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [appointment, setAppointment] = useState<Appointment | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [step, setStep] = useState<"summary" | "checkout">("summary")
+  const [clientSecret, setClientSecret] = useState<string | null>(null)
+  const [creating, setCreating] = useState(false)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!appointmentId) {
-      setError("Missing appointment")
-      setLoading(false)
-      return
-    }
-    fetch(`${API_BASE}/payments/create-payment-intent`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ appointmentId }),
-    })
-      .then(async (r) => {
-        if (!r.ok) throw new Error(await r.text())
-        return r.json()
+  const loadAppointments = useCallback(() => {
+    if (!appointmentId) return Promise.resolve()
+    return fetch(`${API_BASE}/appointments`)
+      .then((r) => r.json())
+      .then((data: Appointment[]) => {
+        const found = data.find((a) => a._id === appointmentId) ?? null
+        if (found) setAppointment(found)
+        else setError("Appointment not found")
       })
-      .then((data) => setClientSecret(data.clientSecret))
       .catch((e) => setError(String(e)))
       .finally(() => setLoading(false))
   }, [appointmentId])
 
-  if (loading) return <div className="container mx-auto px-4 py-8">Loading...</div>
-  if (error) return <div className="container mx-auto px-4 py-8 text-red-500">{error}</div>
-  if (!clientSecret) return null
+  useEffect(() => {
+    void loadAppointments()
+  }, [loadAppointments])
+
+  function handleRetry() {
+    setLoading(true)
+    setError(null)
+    void loadAppointments()
+  }
+
+  async function handleCheckout() {
+    if (!appointmentId) return
+    // Reuse an existing PaymentIntent instead of creating a duplicate one.
+    if (clientSecret) {
+      setStep("checkout")
+      return
+    }
+    setCreating(true)
+    setCheckoutError(null)
+    try {
+      const res = await fetch(`${API_BASE}/payments/create-payment-intent`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appointmentId }),
+      })
+      if (!res.ok) throw new Error(await res.text())
+      const data = await res.json()
+      setClientSecret(data.clientSecret)
+      setStep("checkout")
+    } catch (e) {
+      setCheckoutError(String(e))
+    } finally {
+      setCreating(false)
+    }
+  }
+
+  if (!appointmentId) return <ErrorState error="Missing appointment" />
+  if (loading) return <PageSkeleton />
+  if (error) return <ErrorState error={error} onRetry={handleRetry} />
+  if (!appointment) return null
+
+  const additionalCharges = appointment.additionalCharges ?? 0
+  const discount = appointment.discount ?? 0
+  const total = appointment.price + additionalCharges - discount
 
   return (
-    <div className="min-h-screen bg-[#F1EDE5] px-4 py-10">
-      <div className="mx-auto max-w-3xl">
-        <h1 className="font-heading text-3xl font-semibold text-[#171717]">Complete Your Booking</h1>
-        <Card className="mt-6 border-[#DED6C8] bg-white">
-          <CardHeader>
-            <CardTitle className="text-[#171717]">Payment</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Elements stripe={stripePromise} options={{ clientSecret }}>
-              <PaymentElement />
-            </Elements>
-            <Button disabled className="mt-6 w-full bg-[#B8955A] text-[#171717]">
-              <Lock className="mr-2 size-4" /> Pay Now (coming soon)
-            </Button>
-          </CardContent>
-        </Card>
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <div className="grid gap-6 lg:grid-cols-12 lg:gap-8">
+          {step === "summary" ? (
+            <>
+              {/* Left column — appointment information */}
+              <div className="animate-rise space-y-6 lg:col-span-7">
+                <PageHeader
+                  eyebrow="Secure checkout"
+                  title="Review Your Booking"
+                  description="Everything looks good? Review your appointment details before proceeding to payment."
+                />
+
+                <Card className="rounded-2xl">
+                  <CardContent className="flex flex-col gap-5 p-5 sm:p-6">
+                    <div className="flex items-start gap-4">
+                      {appointment.serviceImage ? (
+                        <img
+                          src={appointment.serviceImage}
+                          alt={appointment.serviceName}
+                          className="size-16 shrink-0 rounded-xl object-cover ring-1 ring-border"
+                        />
+                      ) : (
+                        <span
+                          aria-hidden="true"
+                          className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-background text-gold ring-1 ring-border"
+                        >
+                          <Scissors className="size-6" />
+                        </span>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-semibold tracking-[0.18em] text-gold uppercase">
+                          Your service
+                        </p>
+                        <h2 className="mt-1 font-heading text-xl font-semibold text-foreground">
+                          {appointment.serviceName}
+                        </h2>
+                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                          <StatusBadge status={appointment.status} />
+                          <StatusBadge status={appointment.paymentStatus} />
+                          {appointment.duration != null && (
+                            <span className="text-xs text-muted-foreground">
+                              {appointment.duration} min
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <Separator />
+
+                    <div className="grid gap-x-6 gap-y-5 sm:grid-cols-2">
+                      <DetailItem
+                        icon={User}
+                        label="Customer name"
+                        value={appointment.customerName ?? "—"}
+                      />
+                      <DetailItem
+                        icon={CalendarDays}
+                        label="Appointment date"
+                        value={formatDate(appointment.appointmentDate)}
+                      />
+                      <DetailItem
+                        icon={Clock}
+                        label="Appointment time"
+                        value={formatTime(
+                          appointment.appointmentTime ?? appointment.timeSlot
+                        )}
+                      />
+                      <DetailItem
+                        icon={Hash}
+                        label="Booking reference"
+                        value={appointment._id}
+                        valueClassName="font-mono text-xs break-all"
+                        className="sm:col-span-2"
+                      >
+                        <CopyButton value={appointment._id} />
+                      </DetailItem>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Right column — payment summary */}
+              <div className="lg:col-span-5">
+                <div
+                  className="animate-rise lg:sticky lg:top-24"
+                  style={{ animationDelay: "80ms" }}
+                >
+                  <SummaryCard appointment={appointment} total={total}>
+                    {checkoutError && (
+                      <p className="rounded-xl border border-[#F2CECC] bg-[#FBEAE8] px-4 py-3 text-xs leading-relaxed break-words text-[#B03A34]">
+                        {checkoutError}
+                      </p>
+                    )}
+                    <Button
+                      type="button"
+                      onClick={handleCheckout}
+                      disabled={creating}
+                      className="h-11 w-full gap-2 rounded-xl bg-[#171717] px-5 text-sm font-semibold text-white hover:bg-[#34312D]"
+                    >
+                      {creating ? (
+                        <>
+                          <Spinner aria-hidden="true" />
+                          Preparing…
+                        </>
+                      ) : (
+                        <>
+                          Proceed to Checkout
+                          <ArrowRight aria-hidden="true" />
+                        </>
+                      )}
+                    </Button>
+                  </SummaryCard>
+                </div>
+              </div>
+            </>
+          ) : (
+            clientSecret && (
+              <Elements stripe={stripePromise} options={{ clientSecret }}>
+                <CheckoutForm
+                  appointment={appointment}
+                  total={total}
+                  onBack={() => setStep("summary")}
+                />
+              </Elements>
+            )
+          )}
+        </div>
       </div>
     </div>
   )
@@ -66,7 +684,7 @@ export function PaymentPageContent() {
 
 export default function PaymentPage() {
   return (
-    <Suspense fallback={<div className="container mx-auto px-4 py-8">Loading...</div>}>
+    <Suspense fallback={<PageSkeleton />}>
       <PaymentPageContent />
     </Suspense>
   )
