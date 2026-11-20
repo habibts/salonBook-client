@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { authClient } from "@/lib/auth-client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -29,6 +29,9 @@ export default function ProfilePage() {
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(user?.name ?? "")
   const [saving, setSaving] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [preview, setPreview] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
 
   async function save() {
     if (!name.trim()) {
@@ -44,6 +47,36 @@ export default function ProfilePage() {
       toast.add({ type: "error", title: "Update failed" })
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!["image/jpeg","image/png","image/webp"].includes(file.type)) {
+      toast.add({ type: "error", title: "Invalid image type" })
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.add({ type: "error", title: "Image too large (max 5MB)" })
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setPreview(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  async function saveImage() {
+    if (!preview) return
+    setUploading(true)
+    try {
+      await authClient.updateUser({ image: preview })
+      toast.add({ type: "success", title: "Profile image updated" })
+      setPreview(null)
+    } catch {
+      toast.add({ type: "error", title: "Upload failed" })
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -66,9 +99,23 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
-          <Button onClick={() => setOpen(true)} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Edit Profile</Button>
+          <div className="flex gap-2">
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFile} />
+            <Button onClick={() => fileRef.current?.click()} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Change Photo</Button>
+            <Button onClick={() => setOpen(true)} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Edit Profile</Button>
+          </div>
         </div>
       </div>
+
+      {preview && (
+        <div className="flex items-center gap-4 rounded-xl border border-[#DED6C8] bg-white p-4">
+          <img src={preview} alt="preview" className="size-16 rounded-full object-cover" />
+          <div className="flex gap-2">
+            <Button onClick={saveImage} disabled={uploading} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">{uploading ? "Uploading..." : "Save Photo"}</Button>
+            <Button variant="outline" onClick={() => setPreview(null)}>Cancel</Button>
+          </div>
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>

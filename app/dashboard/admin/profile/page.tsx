@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { authClient } from "@/lib/auth-client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +17,9 @@ export default function AdminProfilePage() {
   const user = session?.user
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(user?.name ?? "")
+  const [uploading, setUploading] = useState(false)
+  const [preview, setPreview] = useState<string | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
   useEffect(() => { setName(user?.name ?? "") }, [user?.name])
   const [saving, setSaving] = useState(false)
 
@@ -41,6 +44,36 @@ export default function AdminProfilePage() {
     }
   }
 
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!["image/jpeg","image/png","image/webp"].includes(file.type)) {
+      toast.add({ type: "error", title: "Invalid image type" })
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.add({ type: "error", title: "Image too large (max 5MB)" })
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setPreview(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  async function saveImage() {
+    if (!preview) return
+    setUploading(true)
+    try {
+      await authClient.updateUser({ image: preview })
+      toast.add({ type: "success", title: "Profile image updated" })
+      setPreview(null)
+    } catch {
+      toast.add({ type: "error", title: "Upload failed" })
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
       <Toaster />
@@ -60,7 +93,11 @@ export default function AdminProfilePage() {
               </div>
             </div>
           </div>
-          <Button onClick={() => setOpen(true)} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Edit Profile</Button>
+          <div className="flex gap-2">
+            <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFile} />
+            <Button onClick={() => fileRef.current?.click()} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Change Photo</Button>
+            <Button onClick={() => setOpen(true)} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Edit Profile</Button>
+          </div>
         </div>
       </div>
 
