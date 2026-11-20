@@ -217,6 +217,59 @@
     background: transparent;
 }
 
+/* ── Payment success confirmation ───────────────────────────────────────── */
+
+/* Soft scale-in for the success medallion */
+@keyframes sb-check-pop {
+    0% {
+        opacity: 0;
+        transform: scale(0.72);
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.04);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@utility animate-check-pop {
+    animation: sb-check-pop 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* One-time halo expanding out of the medallion */
+@keyframes sb-halo {
+    from {
+        opacity: 0.6;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 0;
+        transform: scale(1.5);
+    }
+}
+
+@utility animate-halo {
+    animation: sb-halo 1.3s 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Draws the tick inside the medallion (the path uses pathLength="100") */
+@keyframes sb-check-draw {
+    from {
+        stroke-dashoffset: 100;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+@utility animate-check-draw {
+    stroke-dasharray: 100;
+    animation: sb-check-draw 0.55s 0.35s cubic-bezier(0.65, 0, 0.35, 1) both;
+}
+
 /* Mobile drawer + overlay entrances */
 @keyframes sb-drawer {
     from {
@@ -248,5 +301,15 @@
     .animate-drawer,
     .animate-fade {
         animation: none !important;
+    }
+
+    .animate-check-pop,
+    .animate-halo {
+        animation: none !important;
+    }
+
+    .animate-check-draw {
+        animation: none !important;
+        stroke-dashoffset: 0 !important;
     }
 }

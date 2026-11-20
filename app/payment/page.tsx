@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { loadStripe } from "@stripe/stripe-js"
 import {
   Elements,
@@ -38,70 +38,19 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
+import {
+  type Appointment,
+  appointmentTotal,
+  formatDate,
+  formatTime,
+  money,
+} from "@/lib/payment"
 import { cn } from "@/lib/utils"
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
 )
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
-
-interface Appointment {
-  _id: string
-  serviceName: string
-  serviceImage?: string
-  customerName?: string
-  appointmentDate: string
-  appointmentTime?: string
-  /** Some records store the slot under `timeSlot` instead. */
-  timeSlot?: string
-  price: number
-  /** Optional breakdown — rendered only when the backend provides it. */
-  additionalCharges?: number
-  discount?: number
-  duration?: number
-  status: string
-  paymentStatus: string
-}
-
-/* ── Formatters ─────────────────────────────────────────────────────────── */
-
-function money(value: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value)
-}
-
-/** "2026-11-25" → "Tue, November 25, 2026" (timezone-safe for date-only values). */
-function formatDate(value?: string) {
-  if (!value) return "—"
-  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
-  const date = dateOnly
-    ? new Date(
-        Number(dateOnly[1]),
-        Number(dateOnly[2]) - 1,
-        Number(dateOnly[3])
-      )
-    : new Date(value)
-  if (Number.isNaN(date.getTime())) return value
-  return date.toLocaleDateString("en-US", {
-    weekday: "short",
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  })
-}
-
-/** "09:00" → "9:00 AM" */
-function formatTime(value?: string) {
-  if (!value) return "—"
-  const time = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(value.trim())
-  if (!time) return value
-  const hour = Number(time[1])
-  const suffix = hour >= 12 ? "PM" : "AM"
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12
-  return `${hour12}:${time[2]} ${suffix}`
-}
 
 /* ── Small building blocks ──────────────────────────────────────────────── */
 
@@ -308,6 +257,7 @@ function CheckoutForm({
 }) {
   const stripe = useStripe()
   const elements = useElements()
+  const router = useRouter()
   const [processing, setProcessing] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [succeeded, setSucceeded] = useState(false)
@@ -320,19 +270,27 @@ function CheckoutForm({
     const result = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        return_url: `${window.location.origin}/payment/success`,
+        // The appointment reference travels with the redirect so the
+        // confirmation page can look the booking up and verify it server-side.
+        return_url: `${window.location.origin}/payment/success?appointmentId=${encodeURIComponent(appointment._id)}`,
       },
       redirect: "if_required",
     })
     if (result.error) {
       setMessage(result.error.message ?? "Payment failed")
       setSucceeded(false)
-    } else if (
-      result.paymentIntent &&
-      result.paymentIntent.status === "succeeded"
-    ) {
-      setMessage("Payment submitted. Awaiting final confirmation.")
+    } else {
+      // Payment went through (or Stripe is finalising it). Either way the
+      // browser is not navigating away on its own (`redirect: "if_required"`),
+      // so hand the customer to the confirmation page — it polls the backend
+      // and only renders success once the webhook has marked the appointment
+      // Paid. `replace` keeps a paid checkout out of the history stack.
+      const paymentIntentId = result.paymentIntent?.id ?? ""
+      const query = new URLSearchParams({ appointmentId: appointment._id })
+      if (paymentIntentId) query.set("transactionId", paymentIntentId)
+      setMessage("Payment confirmed. Verifying with our servers…")
       setSucceeded(true)
+      router.replace(`/payment/success?${query.toString()}`)
     }
     setProcessing(false)
   }
@@ -543,9 +501,7 @@ function PaymentPageContent() {
   if (error) return <ErrorState error={error} onRetry={handleRetry} />
   if (!appointment) return null
 
-  const additionalCharges = appointment.additionalCharges ?? 0
-  const discount = appointment.discount ?? 0
-  const total = appointment.price + additionalCharges - discount
+  const total = appointmentTotal(appointment)
 
   return (
     <div className="min-h-screen bg-background">
