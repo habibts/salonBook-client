@@ -17,6 +17,7 @@ import { StatCard } from "@/components/dashboard/stat-card"
 import { CircleCheck, CirclePause, Layers, Plus } from "lucide-react"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import { useTokenStore } from "@/lib/token-store"
+import { ImageUploader } from "@/components/ui/image-uploader"
 
 interface Service {
   _id: string
@@ -355,10 +356,10 @@ export default function ManageServicesPage() {
                 <Input id="edit-duration" type="number" value={editForm.duration} onChange={(e) => setEditForm({ ...editForm, duration: e.target.value })} />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="edit-image">Image URL</Label>
-              <Input id="edit-image" value={editForm.image} onChange={(e) => setEditForm({ ...editForm, image: e.target.value })} />
-            </div>
+            <ImageUploader
+              value={editForm.image}
+              onChange={(url) => setEditForm({ ...editForm, image: url })}
+            />
             <div className="space-y-1.5">
               <Label htmlFor="edit-description">Description</Label>
               <textarea

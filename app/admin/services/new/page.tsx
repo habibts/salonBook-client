@@ -13,6 +13,7 @@ import { PageHeader } from "@/components/dashboard/page-header"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import { ProtectedPageLoading } from "@/components/dashboard/protected-page-loading"
 import { useTokenStore } from "@/lib/token-store"
+import { ImageUploader } from "@/components/ui/image-uploader"
 
 const categories = ["Haircut & Styling","Hair Coloring","Hair Treatment","Facial & Skincare","Makeup","Manicure & Pedicure","Spa & Massage"]
 
@@ -139,16 +140,10 @@ export default function AddServicePage() {
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="service-image">Image URL</Label>
-              <Input
-                id="service-image"
-                placeholder="https://..."
-                value={form.image}
-                onChange={(e) => setForm({ ...form, image: e.target.value })}
-                required
-              />
-            </div>
+            <ImageUploader
+              value={form.image}
+              onChange={(url) => setForm({ ...form, image: url })}
+            />
 
             <div className="flex items-center gap-3 rounded-lg border border-border bg-background/70 px-4 py-3">
               <Switch
