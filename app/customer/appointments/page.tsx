@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { CalendarDays, Clock, CreditCard, Scissors } from "lucide-react"
 
 import { authClient } from "@/lib/auth-client"
+import { Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -150,6 +151,16 @@ export default function MyAppointmentsPage() {
                     <Button>Pay Now</Button>
                   )}
                 </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    navigator.clipboard.writeText(a._id)
+                    toast.add({ type: "success", title: "Appointment ID copied" })
+                  }}
+                >
+                  <Copy className="size-4" />
+                </Button>
               </CardContent>
             </Card>
           ))}
