@@ -15,6 +15,8 @@ import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { ShieldCheck, UserCheck, UserRound, Users, UserX } from "lucide-react"
+import { useExpressApi, ExpressApiError } from "@/lib/express-api"
+import { useTokenStore } from "@/lib/token-store"
 
 interface User {
   _id: string
@@ -26,10 +28,11 @@ interface User {
   status?: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 const PAGE_SIZE = 10
 
 export default function ManageUsersPage() {
+  const { expressFetch } = useExpressApi()
+  const { isRestoring } = useTokenStore()
   const { data: session } = authClient.useSession()
   const currentUser = session?.user
   const [users, setUsers] = useState<User[]>([])
@@ -40,19 +43,23 @@ export default function ManageUsersPage() {
   const [roleFilter, setRoleFilter] = useState("all")
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<User | null>(null)
-  const [toDelete, setToDelete] = useState<string | null>(null)
-  const [toBlock, setToBlock] = useState<string | null>(null)
+
+  const isLoading = isRestoring || loading
 
   async function fetchUsers() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/users`)
-      if (!res.ok) throw new Error("Failed")
-      const data = (await res.json()) as User[]
-      setUsers(data)
+      const data = await expressFetch<User[]>("/users")
+      setUsers(Array.isArray(data) ? data : [])
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error")
+      if (e instanceof ExpressApiError && e.status === 401) {
+        setError("Your session has expired. Please sign in again.")
+      } else if (e instanceof ExpressApiError && e.status === 403) {
+        setError("Access denied. Admin privileges required.")
+      } else {
+        setError(e instanceof Error ? e.message : "Error")
+      }
     } finally {
       setLoading(false)
     }
@@ -87,28 +94,28 @@ export default function ManageUsersPage() {
   }
 
   async function updateStatus(id: string, status: string) {
-    const res = await fetch(`${API_BASE}/users/${id}/status`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    })
-    if (res.ok) {
+    try {
+      interface ApiResponse { success: boolean }
+      await expressFetch<ApiResponse>(`/users/${id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ status }),
+      })
       toast.add({ type: "success", title: "Updated" })
       fetchUsers()
-    } else {
+    } catch {
       toast.add({ type: "error", title: "Update failed" })
     }
   }
 
   async function deleteUser(id: string) {
-    const res = await fetch(`${API_BASE}/users/${id}`, { method: "DELETE" })
-    if (res.ok) {
+    try {
+      interface ApiResponse { success: boolean }
+      await expressFetch<ApiResponse>(`/users/${id}`, { method: "DELETE" })
       toast.add({ type: "success", title: "Deleted" })
       fetchUsers()
-    } else {
+    } catch {
       toast.add({ type: "error", title: "Delete failed" })
     }
-    setToDelete(null)
   }
 
   function canModify(u: User) {
@@ -141,7 +148,7 @@ export default function ManageUsersPage() {
           <StatCard
             key={c.label}
             label={c.label}
-            value={loading ? "…" : c.value}
+            value={isLoading ? "…" : c.value}
             icon={c.icon}
             tone={c.tone}
             order={i}
@@ -184,13 +191,13 @@ export default function ManageUsersPage() {
         </Button>
       </div>
 
-      {loading ? (
-        <Skeleton className="h-64 w-full rounded-xl" />
-      ) : error ? (
+      {error ? (
         <div className="rounded-xl border border-border bg-card px-6 py-10 text-center">
           <p className="text-sm text-destructive">{error}</p>
           <Button onClick={fetchUsers} className="mt-4">Retry</Button>
         </div>
+      ) : isLoading ? (
+        <Skeleton className="h-64 w-full rounded-xl" />
       ) : paged.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
           No users found.

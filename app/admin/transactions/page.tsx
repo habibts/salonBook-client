@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Search } from "lucide-react"
 import { Receipt, CheckCircle, Clock, DollarSign } from "lucide-react"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
+import { ProtectedPageLoading } from "@/components/dashboard/protected-page-loading"
+import { useTokenStore } from "@/lib/token-store"
 
 interface Transaction {
   _id: string
@@ -33,6 +35,7 @@ interface TransactionDetails {
 
 export default function AdminTransactionsPage() {
   const { expressFetch } = useExpressApi()
+  const { isRestoring } = useTokenStore()
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -42,6 +45,8 @@ export default function AdminTransactionsPage() {
   const [dateFilter, setDateFilter] = useState("all")
   const [selected, setSelected] = useState<string | null>(null)
   const [details, setDetails] = useState<TransactionDetails | null>(null)
+
+  const isLoading = isRestoring || loading
 
   async function loadTransactions() {
     try {
@@ -184,7 +189,9 @@ export default function AdminTransactionsPage() {
         <Button variant="outline" onClick={() => { setQuery(""); setStatusFilter("all"); setDateFilter("all"); setSort("newest") }}>Reset</Button>
       </div>
 
-      {error ? <p className="text-red-600">{error}</p> : loading ? <p>Loading...</p> : (filtered.length === 0 ? (
+      {error ? <p className="text-red-600">{error}</p> : isLoading ? (
+        <ProtectedPageLoading />
+      ) : (filtered.length === 0 ? (
         <div className="rounded-xl border border-[#DED6C8] bg-white p-12 text-center">
           <Receipt className="mx-auto size-10 text-[#B8955A]" />
           <h3 className="mt-4 font-heading text-lg text-[#171717]">No transactions yet</h3>

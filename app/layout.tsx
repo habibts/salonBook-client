@@ -37,11 +37,13 @@ export default function RootLayout({
       )}
     >
       <body>
-        <SiteHeader />
         <ThemeProvider>
-          <TokenStoreProvider>{children}</TokenStoreProvider>
+          <TokenStoreProvider>
+            <SiteHeader />
+            {children}
+            <SiteFooter />
+          </TokenStoreProvider>
         </ThemeProvider>
-        <SiteFooter />
       </body>
     </html>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { getTokenData, getIsRestoring, getRestorationError } from '@/lib/token-store'
+import { getTokenData, getIsRestoring, getRestorationError, waitForRestorationEvent } from '@/lib/token-store'
 
 const EXPRESS_API_BASE = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001'
 
@@ -35,7 +35,7 @@ export function useExpressApi() {
   async function expressFetch<T>(input: string, init?: RequestInit): Promise<T> {
     // If no token but restoration is in progress, wait for it
     if (!getTokenData()?.token && getIsRestoring()) {
-      await waitForRestoration()
+      await waitForRestorationEvent()
     }
 
     // Check again after waiting
@@ -61,9 +61,12 @@ export function useExpressApi() {
 
     // If 401, token might be expired or revoked - try to restore once
     if (response.status === 401) {
-      // Clear invalid token - we need to import clearTokenData
-      // For now, just try to restore
-      await waitForRestoration()
+      // Clear invalid token
+      const { clearTokenDataModule } = await import('@/lib/token-store')
+      clearTokenDataModule()
+      
+      // Wait for restoration
+      await waitForRestorationEvent()
       
       const newToken = getTokenData()?.token
       
@@ -97,20 +100,6 @@ export function useExpressApi() {
   }
 
   return { expressFetch }
-}
-
-// Wait for authentication restoration to complete
-async function waitForRestoration(): Promise<void> {
-  return new Promise((resolve) => {
-    const checkRestoration = () => {
-      if (!getIsRestoring()) {
-        resolve()
-      } else {
-        setTimeout(checkRestoration, 50)
-      }
-    }
-    checkRestoration()
-  })
 }
 
 export async function expressLogout(token: string): Promise<void> {

@@ -13,6 +13,8 @@ import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { BadgeCheck, CalendarCheck, CalendarDays, Clock, XCircle } from "lucide-react"
+import { useExpressApi, ExpressApiError } from "@/lib/express-api"
+import { useTokenStore } from "@/lib/token-store"
 
 interface Appointment {
   _id: string
@@ -32,42 +34,46 @@ interface Appointment {
   createdAt: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
-
 export default function AdminAppointmentsPage() {
+  const { expressFetch } = useExpressApi()
+  const { isRestoring } = useTokenStore()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selected, setSelected] = useState<Appointment | null>(null)
-  const [toCancel, setToCancel] = useState<string | null>(null)
-  const [toConfirm, setToConfirm] = useState<string | null>(null)
   const [confirming, setConfirming] = useState(false)
+
+  const isLoading = isRestoring || loading
 
   async function confirmAppointment(id: string) {
     setConfirming(true)
-    const res = await fetch(`${API_BASE}/appointments/${id}/confirm`, { method: "PATCH" })
-    if (res.ok) {
+    try {
+      interface ApiResponse { success: boolean }
+      await expressFetch<ApiResponse>(`/appointments/${id}/confirm`, { method: "PATCH" })
       toast.add({ type: "success", title: "Confirmed" })
       fetchAppointments()
-    } else {
+    } catch {
       toast.add({ type: "error", title: "Confirm failed" })
     }
     setConfirming(false)
-    setToConfirm(null)
   }
 
   async function fetchAppointments() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/appointments`)
-      if (!res.ok) throw new Error("Failed")
-      const data = (await res.json()) as Appointment[]
-      setAppointments(data)
+      const data = await expressFetch<Appointment[]>("/appointments")
+      setAppointments(Array.isArray(data) ? data : [])
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error")
+      if (e instanceof ExpressApiError && e.status === 401) {
+        setError("Your session has expired. Please sign in again.")
+      } else if (e instanceof ExpressApiError && e.status === 403) {
+        setError("Access denied. Admin privileges required.")
+      } else {
+        setError(e instanceof Error ? e.message : "Error")
+      }
     } finally {
       setLoading(false)
     }
@@ -98,14 +104,14 @@ export default function AdminAppointmentsPage() {
   const cancelled = appointments.filter((a) => a.status === "Cancelled").length
 
   async function cancel(id: string) {
-    const res = await fetch(`${API_BASE}/appointments/${id}/cancel`, { method: "PATCH" })
-    if (res.ok) {
+    try {
+      interface ApiResponse { success: boolean }
+      await expressFetch<ApiResponse>(`/appointments/${id}/cancel`, { method: "PATCH" })
       toast.add({ type: "success", title: "Cancelled" })
       fetchAppointments()
-    } else {
+    } catch {
       toast.add({ type: "error", title: "Cancel failed" })
     }
-    setToCancel(null)
   }
 
   const stats = [
@@ -131,7 +137,7 @@ export default function AdminAppointmentsPage() {
           <StatCard
             key={c.label}
             label={c.label}
-            value={loading ? "…" : c.value}
+            value={isLoading ? "…" : c.value}
             icon={c.icon}
             tone={c.tone}
             order={i}
@@ -163,15 +169,15 @@ export default function AdminAppointmentsPage() {
         </Button>
       </div>
 
-      {loading ? (
-        <Skeleton className="h-64 w-full rounded-xl" />
-      ) : error ? (
+      {error ? (
         <div className="rounded-xl border border-border bg-card px-6 py-10 text-center">
           <p className="text-sm text-destructive">{error}</p>
           <Button onClick={fetchAppointments} className="mt-4">
             Retry
           </Button>
         </div>
+      ) : isLoading ? (
+        <Skeleton className="h-64 w-full rounded-xl" />
       ) : filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
           No appointments match your search or filters.
@@ -257,15 +263,15 @@ export default function AdminAppointmentsPage() {
                                 Are you sure you want to cancel this appointment?
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Keep Appointment</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => cancel(a._id)}>
-                                Confirm Cancellation
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </>
+<AlertDialogFooter>
+                                <AlertDialogCancel>Keep Appointment</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => cancel(a._id)}>
+                                  Confirm Cancellation
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
                       )}
                     </div>
                   </TableCell>
