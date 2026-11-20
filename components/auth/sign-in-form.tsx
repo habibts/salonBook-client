@@ -10,10 +10,12 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import { authClient } from "@/lib/auth-client"
+import { authClient, issueJWT } from "@/lib/auth-client"
+import { useTokenStore } from "@/lib/token-store"
 
 function SignInForm() {
   const router = useRouter()
+  const { setTokenData } = useTokenStore()
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -40,6 +42,13 @@ function SignInForm() {
         return
       }
 
+      const { data, error: jwtError } = await issueJWT()
+      if (jwtError || !data) {
+        setError(jwtError ?? "Failed to obtain authentication token.")
+        return
+      }
+
+      setTokenData(data)
       router.push("/")
     } catch {
       setError("Something went wrong. Please try again.")

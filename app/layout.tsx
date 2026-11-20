@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google"
 import "./globals.css"
 import { SiteFooter, SiteHeader } from "@/components/site-chrome"
 import { ThemeProvider } from "@/components/theme-provider"
+import { TokenStoreProvider } from "@/lib/token-store"
 import { cn } from "@/lib/utils"
 
 const inter = Inter({
@@ -37,7 +38,9 @@ export default function RootLayout({
     >
       <body>
         <SiteHeader />
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <TokenStoreProvider>{children}</TokenStoreProvider>
+        </ThemeProvider>
         <SiteFooter />
       </body>
     </html>

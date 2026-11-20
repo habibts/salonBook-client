@@ -21,7 +21,9 @@ import {
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Toaster, toast } from "@/components/ui/toast"
-import { authClient } from "@/lib/auth-client"
+import { authClient, clearJWT } from "@/lib/auth-client"
+import { expressLogout } from "@/lib/express-api"
+import { useTokenStore } from "@/lib/token-store"
 import type { DashboardRole } from "@/lib/roles"
 import { cn } from "@/lib/utils"
 
@@ -245,6 +247,7 @@ function DashboardShell({ role, children }: DashboardShellProps) {
   const router = useRouter()
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const { tokenData, clearTokenData } = useTokenStore()
 
   const { data: session, isPending } = authClient.useSession()
   const user = session?.user ?? null
@@ -270,6 +273,8 @@ function DashboardShell({ role, children }: DashboardShellProps) {
     setLoggingOut(true)
 
     try {
+      const token = tokenData?.token
+
       const { error } = await authClient.signOut({
         fetchOptions: {
           onSuccess: () => {
@@ -277,6 +282,12 @@ function DashboardShell({ role, children }: DashboardShellProps) {
           },
         },
       })
+
+      await clearJWT()
+      if (token) {
+        await expressLogout(token)
+      }
+      clearTokenData()
 
       if (error) {
         toast.add({

@@ -1,0 +1,38 @@
+import { NextResponse } from 'next/server'
+import { headers } from 'next/headers'
+import { auth } from '@/lib/auth'
+import { signJWT, JWT_COOKIE_NAME, getJWTCookieOptions } from '@/lib/jwt'
+import { resolveDashboardRole } from '@/lib/roles'
+
+export async function POST() {
+  const headersList = await headers()
+  const session = await auth.api.getSession({ headers: headersList })
+
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const role = resolveDashboardRole(session.user)
+
+  const token = await signJWT({
+    userId: session.user.id,
+    email: session.user.email,
+    role,
+    name: session.user.name ?? undefined,
+  })
+
+  const response = NextResponse.json({
+    success: true,
+    token,
+    user: {
+      id: session.user.id,
+      email: session.user.email,
+      name: session.user.name,
+      role,
+    },
+  })
+
+  response.cookies.set(JWT_COOKIE_NAME, token, getJWTCookieOptions())
+
+  return response
+}

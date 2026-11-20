@@ -14,7 +14,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { authClient } from "@/lib/auth-client"
+import { authClient, clearJWT } from "@/lib/auth-client"
+import { expressLogout } from "@/lib/express-api"
+import { useTokenStore } from "@/lib/token-store"
 import { cn } from "@/lib/utils"
 
 const publicLinks = [
@@ -57,9 +59,11 @@ function getInitials(name: string) {
 
 function AccountMenu({ user }: { user: SessionUser }) {
   const router = useRouter()
+  const { tokenData, clearTokenData } = useTokenStore()
 
   async function handleSignOut() {
     try {
+      const token = tokenData?.token
       await authClient.signOut({
         fetchOptions: {
           onSuccess: () => {
@@ -67,6 +71,11 @@ function AccountMenu({ user }: { user: SessionUser }) {
           },
         },
       })
+      await clearJWT()
+      if (token) {
+        await expressLogout(token)
+      }
+      clearTokenData()
     } catch {
       // Sign-out failed — the session stays active and the Navbar is unchanged.
     }

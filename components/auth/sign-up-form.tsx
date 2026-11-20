@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
-import { authClient } from "@/lib/auth-client"
+import { authClient, issueJWT } from "@/lib/auth-client"
+import { useTokenStore } from "@/lib/token-store"
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2 MB
 
@@ -25,6 +26,7 @@ function fileToDataUrl(file: File): Promise<string> {
 
 function SignUpForm() {
   const router = useRouter()
+  const { setTokenData } = useTokenStore()
   const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
@@ -66,6 +68,13 @@ function SignUpForm() {
         return
       }
 
+      const { data, error: jwtError } = await issueJWT()
+      if (jwtError || !data) {
+        setError(jwtError ?? "Failed to obtain authentication token.")
+        return
+      }
+
+      setTokenData(data)
       router.push("/")
     } catch {
       setError("Something went wrong. Please try again.")
