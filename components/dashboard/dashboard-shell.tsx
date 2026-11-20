@@ -44,7 +44,7 @@ const ADMIN_NAV: NavItem[] = [
   { label: "Manage Appointments", href: "/admin/appointments", icon: ClipboardList },
   { label: "Manage Users", href: "/admin/users", icon: Users },
   { label: "Transactions", href: "/admin/transactions", icon: CreditCard },
-  { label: "My Profile", href: "/admin/profile", icon: UserRound },
+  { label: "My Profile", href: "/dashboard/admin/profile", icon: UserRound },
 ]
 
 function getNavItems(role: DashboardRole): NavItem[] {

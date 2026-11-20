@@ -1,12 +1,16 @@
 "use client"
 
-import { Mail, UserRound } from "lucide-react"
-
+import { useState } from "react"
 import { authClient } from "@/lib/auth-client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { PageHeader } from "@/components/dashboard/page-header"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Toaster, toast } from "@/components/ui/toast"
+import { User, Mail, Calendar, IdCard, UserRound } from "lucide-react"
 
 function getInitials(name?: string) {
   const initials = (name ?? "")
@@ -22,57 +26,143 @@ function getInitials(name?: string) {
 export default function ProfilePage() {
   const { data: session, isPending } = authClient.useSession()
   const user = session?.user
+  const [open, setOpen] = useState(false)
+  const [name, setName] = useState(user?.name ?? "")
+  const [saving, setSaving] = useState(false)
+
+  async function save() {
+    if (!name.trim()) {
+      toast.add({ type: "error", title: "Name required" })
+      return
+    }
+    setSaving(true)
+    try {
+      await authClient.updateUser({ name: name.trim() })
+      toast.add({ type: "success", title: "Profile updated" })
+      setOpen(false)
+    } catch {
+      toast.add({ type: "error", title: "Update failed" })
+    } finally {
+      setSaving(false)
+    }
+  }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="Account"
-        title="My Profile"
-        description="Your personal details as registered with SalonBook."
-      />
+    <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
+      <Toaster />
+      <div className="rounded-2xl bg-[#171717] p-6 text-[#F1EDE5]">
+        <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Avatar className="size-16 border-2 border-[#B8955A]">
+              {user?.image ? <AvatarImage src={user.image} /> : null}
+              <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+            </Avatar>
+            <div>
+              <h1 className="font-heading text-2xl font-semibold">{isPending ? "Loading..." : user?.name}</h1>
+              <p className="text-sm text-[#E8D8B9]">{user?.email}</p>
+              <div className="mt-1 flex gap-2">
+                <Badge className="bg-[#B8955A] text-[#171717]">Customer</Badge>
+                <Badge className="bg-[#657C67] text-white">Active</Badge>
+              </div>
+            </div>
+          </div>
+          <Button onClick={() => setOpen(true)} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Edit Profile</Button>
+        </div>
+      </div>
 
-      <Card className="animate-rise max-w-2xl">
-        <CardHeader className="border-b border-border pb-4">
-          <CardTitle className="text-lg">Profile details</CardTitle>
-          <CardDescription>
-            {isPending ? "Loading your account…" : "Information tied to your SalonBook account."}
-          </CardDescription>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Profile</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Full Name</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={save} disabled={saving} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
+                {saving ? "Saving..." : "Save Changes"}
+              </Button>
+              <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Card className="border-[#DED6C8] bg-white">
+        <CardHeader>
+          <CardTitle className="text-[#171717]">Personal Information</CardTitle>
+          <p className="text-sm text-[#77736D]">Your personal account details</p>
         </CardHeader>
-
-        <CardContent className="pt-5">
-          {isPending ? (
-            <div className="flex items-center gap-4">
-              <Skeleton className="size-16 rounded-full" />
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-5 w-40" />
-                <Skeleton className="h-4 w-56" />
-              </div>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="flex items-center gap-3">
+            <User className="size-5 text-[#B8955A]" />
+            <div>
+              <p className="text-xs text-[#77736D]">Full Name</p>
+              <p className="text-[#34312D]">{user?.name ?? "—"}</p>
             </div>
-          ) : (
-            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-              <Avatar className="size-16 ring-2 ring-gold/50 ring-offset-2 ring-offset-background">
-                {user?.image ? <AvatarImage src={user.image} alt={user.name ?? "Profile"} /> : null}
-                <AvatarFallback className="bg-charcoal text-lg font-semibold text-gold">
-                  {getInitials(user?.name)}
-                </AvatarFallback>
-              </Avatar>
-
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-heading text-2xl font-semibold text-foreground">
-                  {user?.name ?? "—"}
-                </p>
-                <p className="mt-1 inline-flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="size-4 text-gold" aria-hidden="true" />
-                  <span className="truncate">{user?.email ?? "—"}</span>
-                </p>
-              </div>
-
-              <span className="inline-flex w-fit items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-3.5 py-1.5 text-[11px] font-semibold tracking-[0.14em] text-gold uppercase">
-                <UserRound className="size-3.5" aria-hidden="true" />
-                Member
-              </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Mail className="size-5 text-[#B8955A]" />
+            <div>
+              <p className="text-xs text-[#77736D]">Email Address</p>
+              <p className="break-all text-[#34312D]">{user?.email ?? "—"}</p>
             </div>
-          )}
+          </div>
+          <div className="flex items-center gap-3">
+            <IdCard className="size-5 text-[#B8955A]" />
+            <div>
+              <p className="text-xs text-[#77736D]">User ID</p>
+              <p className="break-all text-[#34312D]">{user?.id ?? "—"}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Calendar className="size-5 text-[#B8955A]" />
+            <div>
+              <p className="text-xs text-[#77736D]">Account Created</p>
+              <p className="text-[#34312D]">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-[#DED6C8] bg-white">
+        <CardHeader>
+          <CardTitle className="text-[#171717]">Account Overview</CardTitle>
+          <p className="text-sm text-[#77736D]">A quick overview of your account</p>
+        </CardHeader>
+        <CardContent className="grid gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
+            <p className="text-xs text-[#77736D]">Account Role</p>
+            <p className="font-semibold text-[#171717]">Customer</p>
+          </div>
+          <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
+            <p className="text-xs text-[#77736D]">Account Status</p>
+            <p className="font-semibold text-[#657C67]">Active</p>
+          </div>
+          <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
+            <p className="text-xs text-[#77736D]">Member Since</p>
+            <p className="font-semibold text-[#34312D]">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</p>
+          </div>
+          <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
+            <p className="text-xs text-[#77736D]">Auth Provider</p>
+            <p className="font-semibold text-[#34312D]">Email</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-[#DED6C8] bg-white">
+        <CardHeader>
+          <CardTitle className="text-[#171717]">Account Security</CardTitle>
+          <p className="text-sm text-[#77736D]">Manage your account security and authentication</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-[#34312D]">Authentication Provider: Email/Password</p>
+          <p className="text-sm text-[#77736D]">Password change requires backend support not currently available.</p>
+          <Button onClick={() => authClient.signOut()} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
+            Sign Out
+          </Button>
         </CardContent>
       </Card>
     </div>
