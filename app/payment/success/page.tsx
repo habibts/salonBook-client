@@ -25,7 +25,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Spinner } from "@/components/ui/spinner"
-import { apiFetch } from "@/lib/api"
+import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import {
   type Appointment,
   appointmentTotal,
@@ -37,8 +37,6 @@ import {
 import { cn } from "@/lib/utils"
 import { showSuccess, showError, showWarning, showInfo } from "@/lib/toast"
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
-
 /** How long we keep re-checking while the Stripe webhook catches up. */
 const MAX_VERIFY_ATTEMPTS = 10
 const VERIFY_RETRY_DELAY = 2_500
@@ -49,6 +47,20 @@ const VERIFY_RETRY_DELAY = 2_500
  */
 type Phase =
   "verifying" | "paid" | "processing" | "error" | "missing" | "declined"
+
+/** Response of `POST /payments/verify` — the backend settles with Stripe. */
+type VerifyPaymentResponse = {
+  paid: boolean
+  appointment: Appointment
+}
+
+/** Thrown when the appointment the link points at no longer exists. */
+class AppointmentNotFoundError extends Error {
+  constructor() {
+    super("Appointment not found")
+    this.name = "AppointmentNotFoundError"
+  }
+}
 
 const primaryButtonClassName =
   "h-11 w-full gap-2 rounded-xl bg-[#171717] px-6 text-sm font-semibold text-white hover:bg-[#34312D] sm:w-auto"
@@ -308,6 +320,7 @@ function SuccessView({
 function PaymentSuccessContent() {
   const params = useSearchParams()
   const router = useRouter()
+  const { expressFetch } = useExpressApi()
 
   const appointmentId = params.get("appointmentId") ?? ""
   /** Stripe appends `payment_intent`; the checkout page sends `transactionId`. */
@@ -337,8 +350,10 @@ function PaymentSuccessContent() {
   /**
    * Re-checks the backend until it reports `paymentStatus: Paid`.
    *
-   * Read-only: nothing is written here, so a retry can never produce a
-   * duplicate transaction — the webhook owns that side of the flow.
+   * Every pass first asks the backend to settle the payment with Stripe
+   * directly, so the page also works when the webhook has not reached the
+   * server (local development, webhook downtime). That endpoint is
+   * idempotent — retrying can never duplicate a charge or a transaction.
    */
   const verify = useCallback(() => {
     // A declined redirect never reaches the backend check — there is nothing
@@ -357,6 +372,41 @@ function PaymentSuccessContent() {
     let tries = 0
     let lastFailure: string | null = null
 
+    /** Reads the record, settling it with Stripe first when possible. */
+    const readAppointment = async (): Promise<{
+      appointment: Appointment
+      paid: boolean
+    }> => {
+      try {
+        const verification = await expressFetch<VerifyPaymentResponse>(
+          "/payments/verify",
+          {
+            method: "POST",
+            body: JSON.stringify({
+              appointmentId,
+              paymentIntentId: transactionId || undefined,
+            }),
+          }
+        )
+        if (verification?.appointment) {
+          return {
+            appointment: verification.appointment,
+            paid: verification.paid || isPaid(verification.appointment),
+          }
+        }
+      } catch (e) {
+        // Only an expired session is fatal. Anything else — an older backend
+        // without this endpoint, a network hiccup — falls back to the plain
+        // read below, which the webhook can still update.
+        if (e instanceof ExpressApiError && e.status === 401) throw e
+      }
+
+      const appointments = await expressFetch<Appointment[]>("/appointments")
+      const found = appointments.find((item) => item._id === appointmentId)
+      if (!found) throw new AppointmentNotFoundError()
+      return { appointment: found, paid: isPaid(found) }
+    }
+
     const run = async () => {
       if (!isCurrent()) return
 
@@ -369,13 +419,28 @@ function PaymentSuccessContent() {
       setAttempt(tries)
 
       try {
-        const appointments = await apiFetch<Appointment[]>(
-          `${API_BASE}/appointments`
-        )
+        const result = await readAppointment()
         if (!isCurrent()) return
 
-        const found = appointments.find((item) => item._id === appointmentId)
-        if (!found) {
+        lastFailure = null
+        setAppointment(result.appointment)
+
+        if (result.paid) {
+          setPhase("paid")
+          return
+        }
+      } catch (e) {
+        if (!isCurrent()) return
+        if (e instanceof ExpressApiError && e.status === 401) {
+          // The token refresh already failed once — polling cannot fix a
+          // missing session, so stop and tell the customer to sign in again.
+          setError(
+            "Your session has expired. Please sign in again to confirm this payment."
+          )
+          setPhase("error")
+          return
+        }
+        if (e instanceof AppointmentNotFoundError) {
           // The record is not there at all — polling will not bring it back.
           setError(
             "We couldn't find this appointment. The link may be out of date — open it again from your appointments list."
@@ -383,16 +448,6 @@ function PaymentSuccessContent() {
           setPhase("error")
           return
         }
-
-        lastFailure = null
-        setAppointment(found)
-
-        if (isPaid(found)) {
-          setPhase("paid")
-          return
-        }
-      } catch (e) {
-        if (!isCurrent()) return
         lastFailure =
           e instanceof Error && e.message
             ? e.message
@@ -413,7 +468,7 @@ function PaymentSuccessContent() {
     }
 
     void run()
-  }, [appointmentId, declined])
+  }, [appointmentId, declined, expressFetch, transactionId])
 
   // Show toasts when phase changes to terminal states
   useEffect(() => {
