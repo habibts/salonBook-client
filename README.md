@@ -1,83 +1,115 @@
-# StudioSpace
-Peer-to-Peer Creative Workspace & Production Studio Sharing Platform.
+# SalonBook — Salon Appointment Booking Platform
 
-## 1. Live Website
-Include the actual deployed client URL:
-https://studio-space-client-steel.vercel.app/
+SalonBook is a salon appointment booking platform where customers can explore salon services, book appointments, and manage their bookings. Administrators can manage services, customers, appointments, and payment information through an admin dashboard.
 
-## 🔗 Project Repositories
+## Important Features
 
-- Client Repository: https://github.com/habibts/studio-space-client
-- Server Repository: https://github.com/habibts/studio-space-server
+- User authentication and authorization
+- Google sign-in
+- Customer and admin dashboards
+- Browse salon services
+- Service details and pricing
+- Appointment booking and management
+- Appointment status tracking
+- Online payment integration
+- Payment history and status tracking
+- Admin service management (create, update, and delete services)
+- Service image upload from a device
+- Image hosting through ImgBB
+- Customer and appointment management
+- Dashboard statistics
+- Responsive UI for mobile, tablet, and desktop
+- Toast notifications for user feedback
+- Protected pages and role-based access
 
+## Technology Stack
 
-## 2. Project Overview
-Write a meaningful introduction explaining how StudioSpace connects creative professionals with studio owners and allows users to discover, book, and manage creative spaces.
-
-## 3. Key Features
-Include at least 5 meaningful bullet points based on actual implemented functionality, such as:
-- User authentication with email/password.
-- Google and GitHub social authentication.
-- Browse and explore creative studios.
-- Search and filter studios by category.
-- View detailed studio information.
-- Add, edit, and delete studio listings.
-- Book creative workspaces.
-- Booking status management (Pending, Confirmed, Completed, Cancelled).
-- Booking overlap prevention.
-- User dashboard and personal booking/listing management.
-- Responsive design.
-- Dark and light theme support.
-
-Only include features that are actually implemented.
-
-## 4. Technology Stack
-Inspect package.json and the backend dependencies.
-Document the actual technologies used by the client and server.
-
-Possible technologies to verify:
 - Next.js
 - React
 - TypeScript
 - Tailwind CSS
 - shadcn/ui
 - Better Auth
-- Express.js
-- MongoDB
-- Sonner
-- Swiper
+- Stripe
+- ImgBB
+- REST API
 - Vercel
 
-Do not list any technology that is not actually used.
+## Installation Instructions
 
-## 5. Local Installation & Setup
+1. Clone the client repository:
 
-Provide complete instructions for running both client and server locally.
+   ```bash
+   git clone YOUR_CLIENT_REPOSITORY_URL
+   ```
 
-Client:
-- Clone the repository.
-- Install dependencies.
-- Configure the client .env.local file.
-- Run npm run dev.
-- Client runs at http://localhost:3000.
+2. Navigate to the project directory:
 
-Backend:
-- Navigate to the backend folder.
-- Install dependencies.
-- Configure the backend .env file.
-- Run the actual backend development/start script.
-- Backend runs at http://localhost:3001.
+   ```bash
+   cd salon-book-client
+   ```
 
-Inspect actual package.json scripts and environment variable names before documenting them.
+3. Install dependencies:
 
-Do not include real secrets or API keys in README.
-Provide safe placeholder values and explain which environment variables are required.
+   ```bash
+   npm install
+   ```
 
-## 6. Environment Variables
-Document actual required environment variable names for:
-- MongoDB connection.
-- Better Auth.
-- Google OAuth.
-- GitHub OAuth.
-- JWT.
-- Backend API URL.
+4. Create a `.env.local` file in the project root and add the required environment variables (names only are listed below).
+
+5. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+## How to Run Locally
+
+The frontend development server runs at:
+
+**http://localhost:3000**
+
+Run the following command:
+
+```bash
+npm run dev
+```
+
+To create a production build:
+
+```bash
+npm run build
+```
+
+To run the production build locally:
+
+```bash
+npm run start
+```
+
+## Required Environment Variables
+
+Add these variable names to `.env.local`. Do not commit secret values.
+
+```env
+NEXT_PUBLIC_API_URL=
+BETTER_AUTH_SECRET=
+BETTER_AUTH_URL=
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+```
+
+> Check the actual project configuration and include any additional variables required by your implementation. Never publish secret values.
+
+## Live Website
+
+https://salon-book-client-wine.vercel.app/
+
+## Client Repository
+
+https://github.com/habibts/salonBook-client
+
+## Server Repository
+
+https://github.com/habibts/salonBook-server
+
