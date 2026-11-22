@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { ProfilePhotoPicker } from "@/components/auth/profile-photo-picker"
 import { Spinner } from "@/components/ui/spinner"
 import { authClient, issueJWT } from "@/lib/auth-client"
 import { useTokenStore } from "@/lib/token-store"
@@ -15,6 +16,7 @@ function SignUpForm() {
   const router = useRouter()
   const { setTokenData } = useTokenStore()
   const [pending, setPending] = useState(false)
+  const [photo, setPhoto] = useState<string | null>(null)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -31,6 +33,7 @@ function SignUpForm() {
         name,
         email,
         password,
+        ...(photo ? { image: photo } : {}),
       })
 
       if (signUpError) {
@@ -57,6 +60,10 @@ function SignUpForm() {
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
+      <div className="flex justify-center pb-1">
+        <ProfilePhotoPicker onChange={setPhoto} disabled={pending} />
+      </div>
+
       <Field>
         <FieldLabel htmlFor="full-name" className="text-midnight">
           Full Name

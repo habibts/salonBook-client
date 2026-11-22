@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { LayoutDashboard, LogOut, Menu, User, X } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -23,7 +23,8 @@ import { showSuccess, showError } from "@/lib/toast"
 
 const publicLinks = [
   { label: "Home", href: "/" },
-  { label: "Browse Services", href: "/services" },
+  { label: "Services", href: "/services" },
+  { label: "Why Choose SalonBook?", href: "#why-choose-salonbook" },
 ]
 
 /*
@@ -46,6 +47,29 @@ type SessionUser = NonNullable<
 
 function isActivePath(pathname: string, href: string) {
   return href === "/" ? pathname === "/" : pathname.startsWith(href)
+}
+
+function useAnchorActive(href: string) {
+  const [isActive, setIsActive] = useState(false)
+
+  useEffect(() => {
+    if (!href.startsWith("#")) return
+
+    const element = document.querySelector(href)
+    if (!element) return
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsActive(entry.isIntersecting)
+      },
+      { rootMargin: "-20% 0px -70% 0px", threshold: 0 }
+    )
+
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [href])
+
+  return isActive
 }
 
 function getInitials(name: string) {
@@ -149,6 +173,52 @@ function AccountMenu({ user }: { user: SessionUser }) {
   )
 }
 
+function ScrollLink({ href, label, active, onClick, isAnchorActive }: { href: string; label: string; active: boolean; onClick?: () => void; isAnchorActive?: boolean }) {
+  const isAnchor = href.startsWith("#")
+  const combinedActive = active || isAnchorActive
+
+  if (isAnchor) {
+    return (
+      <a
+        href={href}
+        onClick={(e) => {
+          e.preventDefault()
+          const target = document.querySelector(href)
+          if (target) {
+            target.scrollIntoView({ behavior: "smooth" })
+          }
+          onClick?.()
+        }}
+        aria-current={combinedActive ? "page" : undefined}
+        className={cn(
+          "relative py-2 text-sm font-medium transition-colors after:absolute after:-bottom-0.5 after:left-0 after:h-px after:bg-gold after:transition-all after:duration-300 cursor-pointer",
+          combinedActive
+            ? "text-gold after:w-full"
+            : "text-ivory after:w-0 hover:text-gold hover:after:w-full"
+        )}
+      >
+        {label}
+      </a>
+    )
+  }
+
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      aria-current={combinedActive ? "page" : undefined}
+      className={cn(
+        "relative py-2 text-sm font-medium transition-colors after:absolute after:-bottom-0.5 after:left-0 after:h-px after:bg-gold after:transition-all after:duration-300",
+        combinedActive
+          ? "text-gold after:w-full"
+          : "text-ivory after:w-0 hover:text-gold hover:after:w-full"
+      )}
+    >
+      {label}
+    </Link>
+  )
+}
+
 export function Navbar() {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -158,15 +228,12 @@ export function Navbar() {
   const user = session?.user ?? null
   const showAuthLinks = !isPending && user === null
 
-  const navLinks = [
-    ...publicLinks,
-    ...(showAuthLinks ? [{ label: "Sign In", href: "/sign-in" }] : []),
-  ]
+  const whyChooseActive = useAnchorActive("#why-choose-salonbook")
 
   return (
     <header className="sticky top-0 z-50 border-b border-dark-border bg-midnight/95 backdrop-blur-md">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-4 sm:px-6 lg:px-8">
-        {/* Brand */}
+      <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] h-16 items-center gap-6 px-4 sm:px-6 lg:px-8">
+        {/* LEFT: SalonBook logo */}
         <Link
           href="/"
           aria-label="SalonBook — Home"
@@ -175,63 +242,68 @@ export function Navbar() {
           SalonBook
         </Link>
 
-        {/* Desktop navigation */}
+        {/* CENTER: Navigation links - independently centered */}
         <nav
           aria-label="Main navigation"
-          className="hidden items-center gap-8 md:flex"
+          className="flex items-center justify-center gap-8"
         >
-          {navLinks.map((link) => {
+          {publicLinks.map((link) => {
             const active = isActivePath(pathname, link.href)
+            const isAnchorActive = link.href === "#why-choose-salonbook" ? whyChooseActive : false
             return (
-              <Link
+              <ScrollLink
                 key={link.href}
                 href={link.href}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "relative py-2 text-sm font-medium transition-colors after:absolute after:-bottom-0.5 after:left-0 after:h-px after:bg-gold after:transition-all after:duration-300",
-                  active
-                    ? "text-gold after:w-full"
-                    : "text-ivory after:w-0 hover:text-gold hover:after:w-full"
-                )}
-              >
-                {link.label}
-              </Link>
+                label={link.label}
+                active={active}
+                isAnchorActive={isAnchorActive}
+                onClick={closeMenu}
+              />
             )
           })}
-          {showAuthLinks && (
-            <Link
-              href="/sign-up"
-              className={cn(
-                buttonVariants({ size: "lg" }),
-                "rounded-full bg-gold px-6 text-midnight hover:bg-gold-hover"
-              )}
-            >
-              Sign Up
-            </Link>
-          )}
         </nav>
 
-        {/* Session state: loading skeleton, account menu, or nothing */}
-        {isPending ? (
-          <span
-            aria-hidden="true"
-            className="size-8 shrink-0 animate-pulse rounded-full border border-dark-border bg-charcoal/60"
-          />
-        ) : user ? (
-          <AccountMenu user={user} />
-        ) : null}
+        {/* RIGHT: Auth buttons / user menu */}
+        <div className="flex items-center justify-end gap-4">
+          {isPending ? (
+            <span
+              aria-hidden="true"
+              className="size-8 shrink-0 animate-pulse rounded-full border border-dark-border bg-charcoal/60"
+            />
+          ) : user ? (
+            <AccountMenu user={user} />
+          ) : (
+            <>
+              <Link
+                href="/sign-in"
+                className="text-sm font-medium text-ivory hover:text-gold transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                href="/sign-up"
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "rounded-full bg-gold px-6 text-midnight hover:bg-gold-hover"
+                )}
+              >
+                Sign Up
+              </Link>
+            </>
+          )}
 
-        {/* Mobile hamburger */}
-        <button
-          type="button"
-          className="flex size-10 items-center justify-center rounded-lg text-ivory transition-colors hover:bg-ivory/10 hover:text-gold md:hidden"
-          aria-label={menuOpen ? "Close menu" : "Open menu"}
-          aria-expanded={menuOpen}
-          aria-controls="mobile-nav"
-          onClick={() => setMenuOpen((open) => !open)}
-        >
-          {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
-        </button>
+          {/* Mobile hamburger */}
+          <button
+            type="button"
+            className="flex size-10 items-center justify-center rounded-lg text-ivory transition-colors hover:bg-ivory/10 hover:text-gold md:hidden"
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-nav"
+            onClick={() => setMenuOpen((open) => !open)}
+          >
+            {menuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
@@ -242,22 +314,18 @@ export function Navbar() {
           className="border-t border-dark-border bg-midnight/95 px-4 pt-3 pb-6 backdrop-blur-md sm:px-6 md:hidden"
         >
           <div className="flex flex-col gap-1">
-            {navLinks.map((link) => {
+            {publicLinks.map((link) => {
               const active = isActivePath(pathname, link.href)
+              const isAnchorActive = link.href === "#why-choose-salonbook" ? whyChooseActive : false
               return (
-                <Link
+                <ScrollLink
                   key={link.href}
                   href={link.href}
+                  label={link.label}
+                  active={active}
+                  isAnchorActive={isAnchorActive}
                   onClick={closeMenu}
-                  className={cn(
-                    "flex min-h-11 items-center rounded-lg px-4 text-sm font-medium transition-colors",
-                    active
-                      ? "bg-gold/10 text-gold"
-                      : "text-ivory hover:bg-ivory/5 hover:text-gold"
-                  )}
-                >
-                  {link.label}
-                </Link>
+                />
               )
             })}
             {showAuthLinks && (

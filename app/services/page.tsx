@@ -1,7 +1,7 @@
 "use client"
 
 import { Suspense, useEffect, useMemo, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Search } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -34,12 +34,31 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 
 function ServicesPageContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState(searchParams.get("category") ?? "all")
   const [sort, setSort] = useState("none")
+
+  // Sync category with URL search params
+  useEffect(() => {
+    const urlCategory = searchParams.get("category")
+    if (urlCategory !== category) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCategory(urlCategory ?? "all")
+    }
+  }, [searchParams, category])
+
+  function updateUrl(params: Record<string, string>) {
+    const newParams = new URLSearchParams(searchParams)
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) newParams.set(key, value)
+      else newParams.delete(key)
+    })
+    router.push(`/services?${newParams.toString()}`, { scroll: false })
+  }
 
   async function fetchServices() {
     setLoading(true)
@@ -87,6 +106,7 @@ function ServicesPageContent() {
     setSearch("")
     setCategory("all")
     setSort("none")
+    updateUrl({})
   }
 
   return (
@@ -105,11 +125,19 @@ function ServicesPageContent() {
             <Input
               placeholder="Search services..."
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value
+                setSearch(value)
+                updateUrl({ search: value })
+              }}
               className="border-[#E9E3D8] bg-white pl-9 text-[#151515]"
             />
           </div>
-          <Select value={category} onValueChange={(v) => setCategory(v ?? "all")}>
+          <Select value={category} onValueChange={(v) => {
+            const value = v ?? "all"
+            setCategory(value)
+            updateUrl({ category: value === "all" ? "" : value })
+          }}>
             <SelectTrigger className="w-full border-[#E9E3D8] bg-white text-[#151515] md:w-48">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
@@ -122,7 +150,11 @@ function ServicesPageContent() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={sort} onValueChange={(v) => setSort(v ?? "none")}>
+          <Select value={sort} onValueChange={(v) => {
+            const value = v ?? "none"
+            setSort(value)
+            updateUrl({ sort: value === "none" ? "" : value })
+          }}>
             <SelectTrigger className="w-full border-[#E9E3D8] bg-white text-[#151515] md:w-48">
               <SelectValue placeholder="Sort by price" />
             </SelectTrigger>

@@ -2,6 +2,7 @@ import { HeroSection } from "@/components/hero-section"
 import { FeaturedServices } from "@/components/featured-services"
 import { ServiceCategories } from "@/components/service-categories"
 import { WhyChooseSalonBook } from "@/components/why-choose-salonbook"
+import { SalonBookBenefits } from "@/components/salonbook-benefits"
 
 export default function Page() {
   return (
@@ -9,6 +10,7 @@ export default function Page() {
       <HeroSection />
       <FeaturedServices />
       <ServiceCategories />
+      <SalonBookBenefits />
       <WhyChooseSalonBook />
     </main>
   )

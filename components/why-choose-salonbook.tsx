@@ -9,7 +9,7 @@ const features = [
 
 export function WhyChooseSalonBook() {
   return (
-    <section className="bg-[#151515] py-12 md:py-16 lg:py-20">
+    <section id="why-choose-salonbook" className="bg-[#151515] py-12 md:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <p className="text-xs uppercase tracking-widest text-[#C5A46D]">WHY CHOOSE SALONBOOK</p>

@@ -8,10 +8,10 @@ import { Award, Crown, Scissors } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { authClient } from "@/lib/auth-client"
 import { ServiceCard } from "@/components/service-card"
 import { showError } from "@/lib/toast"
 import { fetchWithTimeout } from "@/lib/fetch"
+import { useTokenStore } from "@/lib/token-store"
 
 interface Service {
   _id: string
@@ -31,8 +31,7 @@ export default function ServiceDetailsPage() {
   const params = useParams()
   const id = params?.id as string
   const router = useRouter()
-  const { data: session } = authClient.useSession()
-  const user = session?.user as { role?: string } | null
+  const { isRestoring, isAuthenticated } = useTokenStore()
 
   const [service, setService] = useState<Service | null>(null)
   const [allServices, setAllServices] = useState<Service[]>([])
@@ -40,6 +39,13 @@ export default function ServiceDetailsPage() {
   const [error, setError] = useState<string | null>(null)
   const [retryKey, setRetryKey] = useState(0)
   const [imageError, setImageError] = useState(false)
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isRestoring && !isAuthenticated) {
+      router.push("/sign-in")
+    }
+  }, [isRestoring, isAuthenticated, router])
 
   useEffect(() => {
     const controller = new AbortController()
@@ -72,18 +78,18 @@ export default function ServiceDetailsPage() {
       }
     }
 
-    if (id) fetchServices()
+    if (id && isAuthenticated && !isRestoring) fetchServices()
     return () => controller.abort()
-  }, [id, retryKey])
+  }, [id, retryKey, isAuthenticated, isRestoring])
 
-  const isAdmin = user?.role === "admin"
+  const isAdmin = false
   const isActive = service?.status === "active"
   const related = allServices
     .filter((s) => s.status === "active" && s._id !== id)
     .slice(0, 3)
 
   function handleBook() {
-    if (!session) {
+    if (!isAuthenticated) {
       router.push(`/sign-in?redirect=/services/${id}`)
       return
     }
@@ -91,7 +97,7 @@ export default function ServiceDetailsPage() {
     router.push(`/book-appointment?serviceId=${id}`)
   }
 
-  if (loading) {
+  if (loading || isRestoring) {
     return (
       <div className="bg-[#F7F5F0]">
         <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
