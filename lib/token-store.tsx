@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useCallback, useEffect, useRef, ReactNode } from 'react'
 import type { JwtTokenData } from '@/lib/auth-client'
-import { authClient, issueJWT } from '@/lib/auth-client'
+import { issueJWT } from '@/lib/auth-client'
 
 interface TokenStoreContextType {
   tokenData: JwtTokenData | null
@@ -66,8 +66,6 @@ export function TokenStoreProvider({ children }: { children: ReactNode }) {
   const [isRestoring, setIsRestoring] = useState(true)
   const [restorationError, setRestorationError] = useState<string | null>(null)
 
-  const { data: session, isPending } = authClient.useSession()
-
   // Keep module-level refs in sync with React state
   const tokenDataRef = useRef(tokenData)
   const isRestoringRef = useRef(isRestoring)
@@ -104,27 +102,13 @@ export function TokenStoreProvider({ children }: { children: ReactNode }) {
     return setupCrossTabLogoutListener(clearTokenData)
   }, [clearTokenData])
 
-  // Session restoration: always use API to issue JWT (cookie is httpOnly, can't read client-side)
+  // Session restoration: call API to issue JWT (cookie is httpOnly, can't read client-side)
   useEffect(() => {
     let mounted = true
 
     async function restoreSession() {
       // If we already have a valid token, we're done
       if (tokenDataRef.current?.token) {
-        if (mounted) {
-          setIsRestoring(false)
-          notifyRestorationComplete()
-        }
-        return
-      }
-
-      // If Better Auth session is still loading, wait for it
-      if (isPending) {
-        return
-      }
-
-      // If no session (logged out), we're done
-      if (!session?.user) {
         if (mounted) {
           setIsRestoring(false)
           notifyRestorationComplete()
@@ -158,7 +142,7 @@ export function TokenStoreProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false
     }
-  }, [session, isPending])
+  }, [])
 
   return (
     <TokenStoreContext.Provider

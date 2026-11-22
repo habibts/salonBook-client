@@ -1,6 +1,7 @@
 "use client"
 
 import { useRef, useState } from "react"
+import { useRouter } from "next/navigation"
 import { useTokenStore } from "@/lib/token-store"
 import { useExpressApi } from "@/lib/express-api"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -26,6 +27,7 @@ function getInitials(name?: string) {
 }
 
 export default function ProfilePage() {
+  const router = useRouter()
   const { tokenData, isRestoring, isAuthenticated, clearTokenData } = useTokenStore()
   const { expressFetch } = useExpressApi()
   const user = tokenData?.user
@@ -110,13 +112,12 @@ export default function ProfilePage() {
 
   // Not authenticated - redirect to sign-in
   if (!isAuthenticated || !user) {
-    // In a real app, you might redirect here
     return (
       <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
         <Card className="border-[#DED6C8] bg-white">
           <CardContent className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-[#34312D]">Please sign in to view your profile.</p>
-            <Button onClick={() => window.location.href = "/sign-in"} className="mt-4 bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
+            <Button onClick={() => router.push("/sign-in")} className="mt-4 bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
               Sign In
             </Button>
           </CardContent>
@@ -307,7 +308,7 @@ export default function ProfilePage() {
         <CardContent className="space-y-4">
           <p className="text-[#34312D]">Authentication Provider: Email/Password</p>
           <p className="text-sm text-[#77736D]">Password change requires backend support not currently available.</p>
-          <Button onClick={() => { clearTokenData(); window.location.href = "/sign-in"; }} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
+          <Button onClick={() => { clearTokenData(); router.push("/sign-in"); }} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
             Sign Out
           </Button>
         </CardContent>

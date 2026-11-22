@@ -26,10 +26,14 @@ interface Appointment {
   customerId: string
   serviceName: string
   appointmentDate: string
-  appointmentTime: string
+  /** The API stores the slot as `timeSlot`; older records used `appointmentTime`. */
+  timeSlot?: string
+  appointmentTime?: string
   status: string
   paymentStatus: string
-  servicePrice: number
+  /** The API stores the amount as `price`; older records used `servicePrice`. */
+  price?: number
+  servicePrice?: number
   createdAt: string
 }
 
@@ -255,14 +259,14 @@ export default function CustomerDashboardPage() {
                         {a.serviceName}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {a.appointmentDate} · {a.appointmentTime}
+                        {a.appointmentDate} · {a.timeSlot ?? a.appointmentTime ?? "—"}
                       </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-foreground tabular-nums">
-                      ${a.servicePrice}
+                      ${a.price ?? a.servicePrice ?? 0}
                     </span>
                     <StatusBadge status={a.status} />
                   </div>

@@ -20,7 +20,9 @@ interface Appointment {
   serviceName: string
   serviceImage?: string
   appointmentDate: string
-  appointmentTime: string
+  /** The API stores the slot as `timeSlot`; older records used `appointmentTime`. */
+  timeSlot?: string
+  appointmentTime?: string
   price: number
   duration: number
   status: string
@@ -251,7 +253,7 @@ export default function MyAppointmentsPage() {
                         </span>
                         <span className="inline-flex items-center gap-1.5">
                           <Clock className="size-3.5 text-gold" aria-hidden="true" />
-                          {a.appointmentTime} · {a.duration} min
+                          {a.timeSlot ?? a.appointmentTime ?? "—"} · {a.duration} min
                         </span>
                         <span className="inline-flex items-center gap-1.5">
                           <CreditCard className="size-3.5 text-gold" aria-hidden="true" />${a.price}

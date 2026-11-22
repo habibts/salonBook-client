@@ -14,7 +14,7 @@ export function WhyChooseSalonBook() {
         <div className="text-center">
           <p className="text-xs uppercase tracking-widest text-[#C5A46D]">WHY CHOOSE SALONBOOK</p>
           <h2 className="mt-2 font-heading text-3xl font-semibold text-[#F7F5F0] sm:text-4xl">
-            More Than a Haircut. <span className="text-[#C5A46D]">It's an Experience.</span>
+            More Than a Haircut. <span className="text-[#C5A46D]">It&apos;s an Experience.</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-[#C7C2B9]">
             Discover a better grooming experience with expert professionals, premium services, and effortless online booking.

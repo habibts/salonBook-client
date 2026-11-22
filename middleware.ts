@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(JWT_COOKIE_NAME)?.value
   const cookieHeader = request.headers.get('cookie')
 
-  let payload = token ? await verifyJWT(token) : null
+  const payload = token ? await verifyJWT(token) : null
 
   // If JWT is missing or invalid, fall back to Better Auth session
   if (!payload) {

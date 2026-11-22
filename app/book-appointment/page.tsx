@@ -128,7 +128,7 @@ function BookingContent() {
           </CardHeader>
           <CardContent>
             <Skeleton className="mb-4 aspect-[16/9] w-full rounded-lg" />
-            <p className="text-[#77736D]"><Skeleton className="h-4 w-64" /></p>
+            <p className="text-[#77736D]"><span><Skeleton className="h-4 w-64" /></span></p>
             <form className="mt-6 space-y-4">
               <div>
                 <label className="text-sm text-[#151515]">Date</label>
@@ -183,7 +183,7 @@ function BookingContent() {
           </CardHeader>
           <CardContent>
             <Skeleton className="mb-4 aspect-[16/9] w-full rounded-lg" />
-            <p className="text-[#77736D]"><Skeleton className="h-4 w-64" /></p>
+            <p className="text-[#77736D]"><span><Skeleton className="h-4 w-64" /></span></p>
             <form className="mt-6 space-y-4">
               <div>
                 <label className="text-sm text-[#151515]">Date</label>

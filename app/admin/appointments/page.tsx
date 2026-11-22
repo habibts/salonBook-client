@@ -25,7 +25,9 @@ interface Appointment {
   serviceImage?: string
   category?: string
   appointmentDate: string
-  appointmentTime: string
+  /** The API stores the slot as `timeSlot`; older records used `appointmentTime`. */
+  timeSlot?: string
+  appointmentTime?: string
   price: number
   duration: number
   message?: string
@@ -252,7 +254,7 @@ export default function AdminAppointmentsPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-muted-foreground">{a.appointmentDate}</TableCell>
-                  <TableCell className="text-muted-foreground">{a.appointmentTime}</TableCell>
+                  <TableCell className="text-muted-foreground">{a.timeSlot ?? a.appointmentTime ?? "—"}</TableCell>
                   <TableCell className="font-medium text-foreground tabular-nums">
                     ${a.price}
                   </TableCell>
@@ -335,7 +337,7 @@ export default function AdminAppointmentsPage() {
                 ["Customer", `${selected.customerName ?? "—"} (${selected.customerEmail ?? "—"})`],
                 ["Service", selected.serviceName],
                 ["Date", selected.appointmentDate],
-                ["Time", selected.appointmentTime],
+                ["Time", selected.timeSlot ?? selected.appointmentTime ?? "—"],
                 ["Price", `$${selected.price}`],
                 ["Duration", `${selected.duration} min`],
                 ["Status", selected.status],

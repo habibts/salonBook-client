@@ -249,8 +249,7 @@ function DashboardShell({ role, children }: DashboardShellProps) {
   const [loggingOut, setLoggingOut] = useState(false)
   const { tokenData, clearTokenData } = useTokenStore()
 
-  const { data: session, isPending } = authClient.useSession()
-  const user = session?.user ?? null
+  const user = tokenData?.user ?? null
 
   useEffect(() => {
     if (!drawerOpen) return
@@ -361,7 +360,7 @@ function DashboardShell({ role, children }: DashboardShellProps) {
                   </AvatarFallback>
                 </Avatar>
                 <span className="hidden max-w-[9rem] truncate text-sm font-medium text-foreground sm:block">
-                  {isPending ? "…" : (user?.name ?? "Guest")}
+                  {user?.name ?? "Guest"}
                 </span>
               </div>
             </div>
@@ -371,33 +370,33 @@ function DashboardShell({ role, children }: DashboardShellProps) {
         <main className="flex min-w-0 flex-1 flex-col px-4 py-6 sm:px-6 lg:px-8">
           {children}
         </main>
-      </div>
 
-      {/* Mobile drawer */}
-      {drawerOpen && (
-        <div
-          id="dashboard-drawer"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Dashboard navigation"
-          className="fixed inset-0 z-50 md:hidden"
-        >
-          <button
-            type="button"
-            aria-label="Close navigation menu"
-            onClick={() => setDrawerOpen(false)}
-            className="animate-fade absolute inset-0 bg-midnight/70 backdrop-blur-[2px]"
-          />
-          <div className="animate-drawer absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-sidebar shadow-[8px_0_48px_-16px_rgba(0,0,0,0.7)]">
-            <SidebarContent
-              role={role}
-              onClose={() => setDrawerOpen(false)}
-              onLogout={handleLogout}
-              loggingOut={loggingOut}
+        {/* Mobile drawer */}
+        {drawerOpen && (
+          <div
+            id="dashboard-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Dashboard navigation"
+            className="fixed inset-0 z-50 md:hidden"
+          >
+            <button
+              type="button"
+              aria-label="Close navigation menu"
+              onClick={() => setDrawerOpen(false)}
+              className="animate-fade absolute inset-0 bg-midnight/70 backdrop-blur-[2px]"
             />
+            <div className="animate-drawer absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-sidebar shadow-[8px_0_48px_-16px_rgba(0,0,0,0.7)]">
+              <SidebarContent
+                role={role}
+                onClose={() => setDrawerOpen(false)}
+                onLogout={handleLogout}
+                loggingOut={loggingOut}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
