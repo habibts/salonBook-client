@@ -31,6 +31,7 @@ export async function POST() {
       name: session.user.name,
       role,
       image: session.user.image,
+      phone: (session.user as { phone?: string | null }).phone ?? null,
       createdAt: session.user.createdAt,
     },
   })

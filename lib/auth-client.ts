@@ -14,6 +14,7 @@ export interface JwtTokenData {
     name: string | null
     role: 'customer' | 'admin'
     image?: string | null
+    phone?: string | null
     createdAt?: Date | string | null
   }
 }

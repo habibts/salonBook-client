@@ -42,8 +42,7 @@ export function ImageUploader({
     inputRef.current?.click()
   }, [])
 
-  const startUpload = useCallback(() => {
-    const f = file
+  const startUpload = useCallback((f: File) => {
     if (!f) return
 
     const token = getTokenData()?.token
@@ -100,7 +99,7 @@ export function ImageUploader({
     xhr.open("POST", `${API_BASE}/services/upload-image`)
     xhr.setRequestHeader("Authorization", `Bearer ${token}`)
     xhr.send(formData)
-  }, [file, onChange])
+  }, [onChange])
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,7 +125,7 @@ export function ImageUploader({
       setFile(selected)
       const url = URL.createObjectURL(selected)
       setPreview(url)
-      startUpload()
+      startUpload(selected)
     },
     [maxSize, startUpload]
   )

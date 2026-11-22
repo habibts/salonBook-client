@@ -36,6 +36,11 @@ function initializeAuth(): Promise<ReturnType<typeof betterAuth>> {
             defaultValue: "customer",
             input: false,
           },
+          phone: {
+            type: "string",
+            required: false,
+            input: true,
+          },
         },
       },
       account: {

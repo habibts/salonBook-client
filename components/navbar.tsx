@@ -142,6 +142,7 @@ function AccountMenu({ user }: { user: SessionUser }) {
         {/* User info header */}
         <div className="px-2.5 py-3 border-b border-dark-border">
           <p className="font-medium text-ivory truncate">{user.name}</p>
+          <p className="text-xs text-ivory/60 truncate">{user.email}</p>
           <p className="text-xs text-champagne capitalize">{userRole}</p>
         </div>
         <DropdownMenuItem

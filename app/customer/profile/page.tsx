@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { User, Mail, Calendar, IdCard } from "lucide-react"
+import { User, Mail, Calendar, IdCard, Phone } from "lucide-react"
 import { showSuccess, showError } from "@/lib/toast"
 
 function getInitials(name?: string) {
@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const avatarSrc = userImage as string | undefined
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(user?.name ?? "")
+  const [phone, setPhone] = useState(user?.phone ?? "")
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [preview, setPreview] = useState<string | null>(null)
@@ -134,9 +135,9 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       // Use expressFetch to call protected Express API endpoint
-      await expressFetch("/api/user/profile", {
+      await expressFetch("/user/profile", {
         method: "PUT",
-        body: JSON.stringify({ name: name.trim() }),
+        body: JSON.stringify({ name: name.trim(), phone: phone.trim() }),
       })
       showSuccess({ title: "Profile Updated", description: "Your profile has been updated successfully." })
       setOpen(false)
@@ -168,7 +169,7 @@ export default function ProfilePage() {
     if (!preview) return
     setUploading(true)
     try {
-      await expressFetch("/api/user/profile/image", {
+      await expressFetch("/user/profile/image", {
         method: "PUT",
         body: JSON.stringify({ image: preview }),
       })
@@ -228,6 +229,15 @@ export default function ProfilePage() {
               <Label>Full Name</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
+            <div>
+              <Label>Phone Number (Optional)</Label>
+              <Input
+                type="tel"
+                placeholder="e.g., +1 555-123-4567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
             <div className="flex gap-2">
               <Button onClick={save} disabled={saving} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
                 {saving ? "Saving..." : "Save Changes"}
@@ -256,6 +266,13 @@ export default function ProfilePage() {
             <div>
               <p className="text-xs text-[#77736D]">Email Address</p>
               <p className="break-all text-[#34312D]">{user?.email ?? "—"}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <Phone className="size-5 text-[#B8955A]" />
+            <div>
+              <p className="text-xs text-[#77736D]">Phone Number</p>
+              <p className="text-[#34312D]">{user?.phone ?? "—"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
