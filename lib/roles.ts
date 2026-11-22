@@ -7,10 +7,17 @@
  */
 export type DashboardRole = "customer" | "admin"
 
-interface MaybeRoleUser {
-  role?: unknown
+interface BetterAuthUser {
+  id: string
+  email: string
+  name: string | null
+  emailVerified: boolean
+  image?: string | null
+  createdAt: Date
+  updatedAt: Date
+  role?: string | null
 }
 
-export function resolveDashboardRole(user: MaybeRoleUser | null | undefined): DashboardRole {
+export function resolveDashboardRole(user: BetterAuthUser | null | undefined): DashboardRole {
   return user && user.role === "admin" ? "admin" : "customer"
 }

@@ -6,6 +6,8 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell"
 import { auth } from "@/lib/auth"
 import { resolveDashboardRole } from "@/lib/roles"
 
+const authInstance = await auth;
+
 /**
  * Server-side guard for every `/customer/*` route: the session is read from
  * the Better Auth cookie on the server, so a customer-only page can never be
@@ -17,7 +19,7 @@ export default async function CustomerLayout({
 }: {
   children: ReactNode
 }) {
-  const session = await auth.api.getSession({ headers: await headers() })
+  const session = await authInstance!.api.getSession({ headers: await headers() })
 
   if (!session) redirect("/sign-in")
   if (resolveDashboardRole(session.user) === "admin") redirect("/admin/dashboard")

@@ -5,8 +5,9 @@ import { signJWT, JWT_COOKIE_NAME, getJWTCookieOptions } from '@/lib/jwt'
 import { resolveDashboardRole } from '@/lib/roles'
 
 export async function POST() {
+  const authInstance = await auth;
   const headersList = await headers()
-  const session = await auth.api.getSession({ headers: headersList })
+  const session = await authInstance!.api.getSession({ headers: headersList })
 
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
