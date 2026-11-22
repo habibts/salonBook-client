@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
-import { LayoutDashboard, LogOut, Menu, User, X } from "lucide-react"
+import { LayoutDashboard, LogOut, Menu, User, X, ChevronDown } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { buttonVariants } from "@/components/ui/button"
@@ -88,6 +88,9 @@ function AccountMenu({ user }: { user: SessionUser }) {
   const { tokenData, clearTokenData } = useTokenStore()
   const [signingOut, setSigningOut] = useState(false)
 
+  // Determine role from tokenData (which has the role from JWT)
+  const userRole = tokenData?.user?.role ?? "Customer"
+
   async function handleSignOut() {
     if (signingOut) return
     setSigningOut(true)
@@ -119,7 +122,7 @@ function AccountMenu({ user }: { user: SessionUser }) {
       <DropdownMenuTrigger
         type="button"
         aria-label="Open account menu"
-        className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-midnight"
+        className="flex items-center gap-2 cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-midnight"
       >
         <Avatar className="ring-2 ring-dark-border transition-shadow hover:ring-gold/50">
           {user.image ? (
@@ -129,12 +132,18 @@ function AccountMenu({ user }: { user: SessionUser }) {
             {getInitials(user.name)}
           </AvatarFallback>
         </Avatar>
+        <ChevronDown className="size-4 text-ivory/70 transition-transform group-data-[state=open]:rotate-180" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
         sideOffset={10}
-        className="w-56 rounded-xl border border-dark-border bg-charcoal p-1.5 text-ivory shadow-xl shadow-black/40 ring-dark-border"
+        className="w-64 rounded-xl border border-dark-border bg-charcoal p-1.5 text-ivory shadow-xl shadow-black/40 ring-dark-border"
       >
+        {/* User info header */}
+        <div className="px-2.5 py-3 border-b border-dark-border">
+          <p className="font-medium text-ivory truncate">{user.name}</p>
+          <p className="text-xs text-champagne capitalize">{userRole}</p>
+        </div>
         <DropdownMenuItem
           closeOnClick
           onClick={() => router.push(dashboardHref)}

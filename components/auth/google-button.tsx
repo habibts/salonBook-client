@@ -17,7 +17,6 @@ function GoogleButton({ className }: { className?: string }) {
     try {
       const { error } = await authClient.signIn.social({
         provider: "google",
-        callbackURL: "/api/auth/jwt/issue",
       })
 
       if (error) {

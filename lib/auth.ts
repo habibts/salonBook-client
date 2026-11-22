@@ -21,6 +21,11 @@ function initializeAuth(): Promise<ReturnType<typeof betterAuth>> {
         google: {
           clientId: process.env.GOOGLE_CLIENT_ID!,
           clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+          mapProfileToUser: (profile) => ({
+            name: profile.name,
+            email: profile.email,
+            image: profile.picture,
+          }),
         },
       },
       user: {
@@ -31,6 +36,11 @@ function initializeAuth(): Promise<ReturnType<typeof betterAuth>> {
             defaultValue: "customer",
             input: false,
           },
+        },
+      },
+      account: {
+        accountLinking: {
+          enabled: true,
         },
       },
     };
