@@ -64,6 +64,7 @@ export default function ManageServicesPage() {
     status: "active",
   })
   const [saving, setSaving] = useState(false)
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
 
   const fetchServices = useCallback(async () => {
     try {
@@ -293,9 +294,10 @@ export default function ManageServicesPage() {
                 <TableRow key={s._id}>
                   <TableCell>
                     <img
-                      src={s.image}
+                      src={imageErrors.has(s._id) ? "/images/hero-barbershop.jpg" : s.image}
                       alt={s.serviceName}
                       className="h-12 w-12 rounded-lg object-cover ring-1 ring-border"
+                      onError={() => setImageErrors((prev) => new Set(prev).add(s._id))}
                     />
                   </TableCell>
                   <TableCell className="font-medium text-foreground">{s.serviceName}</TableCell>

@@ -11,18 +11,6 @@ import { authClient, issueJWT } from "@/lib/auth-client"
 import { useTokenStore } from "@/lib/token-store"
 import { showSuccess, showError } from "@/lib/toast"
 
-const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2 MB
-
-function fileToDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = () =>
-      reject(reader.error ?? new Error("Could not read the selected file"))
-    reader.readAsDataURL(file)
-  })
-}
-
 function SignUpForm() {
   const router = useRouter()
   const { setTokenData } = useTokenStore()
@@ -36,25 +24,13 @@ function SignUpForm() {
     const name = String(form.get("name") ?? "").trim()
     const email = String(form.get("email") ?? "").trim()
     const password = String(form.get("password") ?? "")
-    const imageFile = form.get("profile-image")
-
-    if (imageFile instanceof File && imageFile.size > MAX_IMAGE_SIZE) {
-      showError({ title: "Image Too Large", description: "Profile image must be 2 MB or smaller." })
-      return
-    }
 
     setPending(true)
     try {
-      let image: string | undefined
-      if (imageFile instanceof File && imageFile.size > 0) {
-        image = await fileToDataUrl(imageFile)
-      }
-
       const { error: signUpError } = await authClient.signUp.email({
         name,
         email,
         password,
-        ...(image ? { image } : {}),
       })
 
       if (signUpError) {
@@ -121,19 +97,6 @@ function SignUpForm() {
           minLength={8}
           placeholder="••••••••"
           autoComplete="new-password"
-        />
-      </Field>
-
-      <Field>
-        <FieldLabel htmlFor="profile-image" className="text-midnight">
-          Profile Image
-        </FieldLabel>
-        <Input
-          id="profile-image"
-          name="profile-image"
-          type="file"
-          accept="image/png,image/jpeg,image/webp"
-          className="text-muted-gray file:mr-3 file:h-7 file:rounded-md file:border-0 file:bg-champagne file:px-3 file:text-sm file:font-medium file:text-midnight hover:file:bg-gold/80"
         />
       </Field>
 

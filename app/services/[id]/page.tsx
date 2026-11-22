@@ -24,6 +24,7 @@ interface Service {
 }
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
+const PLACEHOLDER_IMAGE = "/images/hero-barbershop.jpg"
 
 export default function ServiceDetailsPage() {
   const params = useParams()
@@ -37,6 +38,7 @@ export default function ServiceDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [retryKey, setRetryKey] = useState(0)
+  const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -156,7 +158,12 @@ export default function ServiceDetailsPage() {
         </nav>
 
         <section>
-          <img src={service.image} alt={service.serviceName} className="aspect-[16/7] w-full rounded-2xl object-cover object-[center_25%]" />
+          <img
+            src={imageError ? PLACEHOLDER_IMAGE : service.image}
+            alt={service.serviceName}
+            className="aspect-[16/7] w-full rounded-2xl object-cover object-[center_25%]"
+            onError={() => setImageError(true)}
+          />
           <div className="mt-6 rounded-2xl bg-[#292929] p-8 text-[#F7F5F0]">
             <p className="text-xs uppercase tracking-widest text-[#C5A46D]">SALONBOOK PREMIUM SERVICE</p>
             <span className="mt-3 inline-block rounded-full bg-[#C5A46D]/10 px-3 py-1 text-sm text-[#C5A46D]">{service.category}</span>

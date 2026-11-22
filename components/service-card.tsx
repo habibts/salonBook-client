@@ -1,6 +1,7 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -15,11 +16,20 @@ interface Service {
   image: string
 }
 
+const PLACEHOLDER_IMAGE = "/images/hero-barbershop.jpg"
+
 export function ServiceCard({ service }: { service: Service }) {
   const router = useRouter()
+  const [imageError, setImageError] = useState(false)
+
   return (
     <Card className="flex h-full flex-col overflow-hidden border-[#3A3834] bg-[#292929] text-[#F7F5F0]">
-      <img src={service.image} alt={service.serviceName} className="aspect-[16/9] w-full object-cover" />
+      <img
+        src={imageError ? PLACEHOLDER_IMAGE : service.image}
+        alt={service.serviceName}
+        className="aspect-[16/9] w-full object-cover"
+        onError={() => setImageError(true)}
+      />
       <CardHeader className="flex-1">
         <CardTitle className="line-clamp-2 font-heading text-[#F7F5F0]">{service.serviceName}</CardTitle>
         <Badge className="bg-[#C5A46D]/10 text-[#C5A46D]">{service.category}</Badge>

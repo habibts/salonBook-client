@@ -23,6 +23,7 @@ interface Service {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 const slots = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"]
+const PLACEHOLDER_IMAGE = "/images/hero-barbershop.jpg"
 
 function BookingContent() {
   const params = useSearchParams()
@@ -37,6 +38,7 @@ function BookingContent() {
   const [message, setMessage] = useState("")
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
+  const [imageError, setImageError] = useState(false)
 
   useEffect(() => {
     if (!serviceId) return
@@ -132,7 +134,12 @@ function BookingContent() {
           <CardTitle className="font-heading text-[#151515]">{service.serviceName}</CardTitle>
         </CardHeader>
         <CardContent>
-          <img src={service.image} alt={service.serviceName} className="mb-4 aspect-[16/9] w-full rounded-lg object-cover" />
+          <img
+            src={imageError ? PLACEHOLDER_IMAGE : service.image}
+            alt={service.serviceName}
+            className="mb-4 aspect-[16/9] w-full rounded-lg object-cover"
+            onError={() => setImageError(true)}
+          />
           <p className="text-[#77736D]">{service.category} · ${service.price} · {service.duration} min</p>
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
