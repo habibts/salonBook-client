@@ -22,7 +22,6 @@ interface Service {
   status: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 const slots = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"]
 const PLACEHOLDER_IMAGE = "/images/hero-barbershop.jpg"
 
@@ -43,14 +42,16 @@ function BookingContent() {
 
   useEffect(() => {
     if (!serviceId) return
-    fetch(`${API_BASE}/services`)
-      .then((r) => r.json())
-      .then((data: Service[]) => {
+    expressFetch<Service[]>("/services")
+      .then((data) => {
         const found = data.find((s) => s._id === serviceId) ?? null
         setService(found)
       })
+      .catch(() => {
+        setService(null)
+      })
       .finally(() => setLoading(false))
-  }, [serviceId])
+  }, [serviceId, expressFetch])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()

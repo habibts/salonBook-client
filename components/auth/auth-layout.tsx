@@ -24,7 +24,7 @@ function AuthLayout({
       />
 
       {/* Form panel */}
-      <div className="relative flex items-center justify-center p-4 py-12 sm:px-6 lg:p-10">
+      <div className="relative flex min-h-full items-center justify-center p-4 py-12 sm:px-6 lg:p-10">
         <div className="w-full max-w-md rounded-2xl border border-champagne bg-white p-6 shadow-xl shadow-black/30 sm:p-8">
           <div className="text-center">
             <Link
@@ -61,7 +61,7 @@ function AuthLayout({
       </div>
 
       {/* Salon imagery panel (desktop) */}
-      <div className="relative hidden lg:block">
+      <div className="relative h-full hidden lg:block">
         <Image
           src="/images/hero-barbershop.jpg"
           alt=""

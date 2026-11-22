@@ -3,10 +3,6 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 
 import { DashboardShell } from "@/components/dashboard/dashboard-shell"
-import { auth } from "@/lib/auth"
-import { resolveDashboardRole } from "@/lib/roles"
-
-const authInstance = await auth;
 
 /**
  * Server-side guard for every `/admin/*` route: only a session whose role is
@@ -18,10 +14,18 @@ export default async function AdminLayout({
 }: {
   children: ReactNode
 }) {
-  const session = await authInstance!.api.getSession({ headers: await headers() })
+  const headersList = await headers()
+  const userId = headersList.get("x-user-id")
+  const userEmail = headersList.get("x-user-email")
+  const userRole = headersList.get("x-user-role")
 
-  if (!session) redirect("/sign-in")
-  if (resolveDashboardRole(session.user) !== "admin") redirect("/customer/dashboard")
+  if (!userId || !userEmail || !userRole) {
+    redirect("/sign-in")
+  }
+
+  if (userRole !== "admin") {
+    redirect("/customer/dashboard")
+  }
 
   return <DashboardShell role="admin">{children}</DashboardShell>
 }
