@@ -9,6 +9,7 @@ import {
   CalendarDays,
   Clock,
   Scissors,
+  X,
 } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -85,6 +86,7 @@ export default function CustomerDashboardPage() {
   const pending = appointments.filter((a) => a.status === "Pending").length
   const confirmed = appointments.filter((a) => a.status === "Confirmed").length
   const completed = appointments.filter((a) => a.status === "Completed").length
+  const cancelled = appointments.filter((a) => a.status === "Cancelled").length
 
   const recent = [...appointments]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -101,6 +103,7 @@ export default function CustomerDashboardPage() {
     { title: "Pending", value: pending, icon: Clock, tone: "amber", hint: "Awaiting confirmation" },
     { title: "Confirmed", value: confirmed, icon: CalendarCheck, tone: "blue", hint: "Ready to be welcomed in" },
     { title: "Completed", value: completed, icon: BadgeCheck, tone: "green", hint: "Visits already enjoyed" },
+    { title: "Cancelled", value: cancelled, icon: X, tone: "red", hint: "Bookings you cancelled" },
   ]
 
   const firstName = user?.name?.split(" ")[0]
