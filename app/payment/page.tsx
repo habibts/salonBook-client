@@ -47,15 +47,14 @@ import {
 } from "@/lib/payment"
 import { cn } from "@/lib/utils"
 import { showError } from "@/lib/toast"
+import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
 )
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 
 /* ── Small building blocks ──────────────────────────────────────────────── */
 
-/** Icon chip with an uppercase label + value — used in the booking card. */
 function DetailItem({
   icon: Icon,
   label,
@@ -97,7 +96,6 @@ function DetailItem({
   )
 }
 
-/** Copies the booking reference with a gentle confirmation swap. */
 function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false)
 
@@ -148,10 +146,6 @@ function SummaryRow({
   )
 }
 
-/**
- * Sticky order-summary card — shared by both steps. The caller renders the
- * call-to-action through `children` (Proceed to Checkout / Pay).
- */
 function SummaryCard({
   appointment,
   total,
@@ -176,7 +170,6 @@ function SummaryCard({
           </span>
         </div>
 
-        {/* Compact appointment recap */}
         <div className="flex items-center gap-3 rounded-xl bg-background p-3">
           {appointment.serviceImage ? (
             <img
@@ -271,8 +264,6 @@ function CheckoutForm({
     const result = await stripe.confirmPayment({
       elements,
       confirmParams: {
-        // The appointment reference travels with the redirect so the
-        // confirmation page can look the booking up and verify it server-side.
         return_url: `${window.location.origin}/payment/success?appointmentId=${encodeURIComponent(appointment._id)}`,
       },
       redirect: "if_required",
@@ -283,11 +274,6 @@ function CheckoutForm({
       setSucceeded(false)
       showError({ title: "Payment Failed", description: errorMessage })
     } else {
-      // Payment went through (or Stripe is finalising it). Either way the
-      // browser is not navigating away on its own (`redirect: "if_required"`),
-      // so hand the customer to the confirmation page — it polls the backend
-      // and only renders success once the webhook has marked the appointment
-      // Paid. `replace` keeps a paid checkout out of the history stack.
       const paymentIntentId = result.paymentIntent?.id ?? ""
       const query = new URLSearchParams({ appointmentId: appointment._id })
       if (paymentIntentId) query.set("transactionId", paymentIntentId)
@@ -300,7 +286,6 @@ function CheckoutForm({
 
   return (
     <>
-      {/* Left column — Stripe payment form */}
       <div className="animate-rise space-y-5 lg:col-span-7">
         <Button
           type="button"
@@ -348,7 +333,6 @@ function CheckoutForm({
         </Card>
       </div>
 
-      {/* Right column — sticky summary with pay action */}
       <div className="lg:col-span-5">
         <div
           className="animate-rise lg:sticky lg:top-24"
@@ -449,21 +433,33 @@ function PaymentPageContent() {
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const { expressFetch } = useExpressApi()
 
-  const loadAppointments = useCallback(() => {
+  const loadAppointments = useCallback(async () => {
     if (!appointmentId) return Promise.resolve()
-    return fetch(`${API_BASE}/appointments`)
-      .then((r) => r.json())
-      .then((data: Appointment[]) => {
-        const found = data.find((a) => a._id === appointmentId) ?? null
-        if (found) setAppointment(found)
-        else setError("Appointment not found")
-      })
-      .catch((e) => setError(String(e)))
-      .finally(() => setLoading(false))
-  }, [appointmentId])
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await expressFetch<Appointment[]>("/appointments")
+      const found = data.find((a) => a._id === appointmentId) ?? null
+      if (found) setAppointment(found)
+      else setError("Appointment not found")
+    } catch (e) {
+      if (e instanceof ExpressApiError && e.status === 401) {
+        setError("Your session has expired. Please sign in again.")
+      } else if (e instanceof ExpressApiError && e.status === 403) {
+        setError("Access denied.")
+      } else {
+        const message = e instanceof Error ? e.message : "Failed to load appointment"
+        setError(message)
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [expressFetch, appointmentId])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadAppointments()
   }, [loadAppointments])
 
@@ -475,7 +471,6 @@ function PaymentPageContent() {
 
   async function handleCheckout() {
     if (!appointmentId) return
-    // Reuse an existing PaymentIntent instead of creating a duplicate one.
     if (clientSecret) {
       setStep("checkout")
       return
@@ -483,31 +478,30 @@ function PaymentPageContent() {
     setCreating(true)
     setCheckoutError(null)
     try {
-      const res = await fetch(`${API_BASE}/payments/create-payment-intent`, {
+      interface CreatePaymentIntentResponse {
+        clientSecret: string
+        paymentIntentId: string
+      }
+      const data = await expressFetch<CreatePaymentIntentResponse>("/payments/create-payment-intent", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ appointmentId }),
       })
-      if (!res.ok) {
-        let errorMessage = "Failed to create payment session"
-        if (res.status === 401) {
-          errorMessage = "Your session has expired. Please sign in again."
-        } else if (res.status === 403) {
-          errorMessage = "This appointment is not eligible for payment."
-        } else if (res.status === 409) {
-          errorMessage = "This appointment has already been paid."
-        } else if (res.status === 404) {
-          errorMessage = "Appointment not found."
-        }
-        throw new Error(errorMessage)
-      }
-      const data = await res.json()
       setClientSecret(data.clientSecret)
       setStep("checkout")
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Unable to start payment. Please try again."
-      setCheckoutError(message)
-      showError({ title: "Payment Session Failed", description: message })
+      if (e instanceof ExpressApiError && e.status === 401) {
+        setCheckoutError("Your session has expired. Please sign in again.")
+      } else if (e instanceof ExpressApiError && e.status === 403) {
+        setCheckoutError("This appointment is not eligible for payment.")
+      } else if (e instanceof ExpressApiError && e.status === 409) {
+        setCheckoutError("This appointment has already been paid.")
+      } else if (e instanceof ExpressApiError && e.status === 404) {
+        setCheckoutError("Appointment not found.")
+      } else {
+        const message = e instanceof Error ? e.message : "Unable to start payment. Please try again."
+        setCheckoutError(message)
+        showError({ title: "Payment Session Failed", description: message })
+      }
     } finally {
       setCreating(false)
     }
@@ -526,7 +520,6 @@ function PaymentPageContent() {
         <div className="grid gap-6 lg:grid-cols-12 lg:gap-8">
           {step === "summary" ? (
             <>
-              {/* Left column — appointment information */}
               <div className="animate-rise space-y-6 lg:col-span-7">
                 <PageHeader
                   eyebrow="Secure checkout"
@@ -604,7 +597,6 @@ function PaymentPageContent() {
                 </Card>
               </div>
 
-              {/* Right column — payment summary */}
               <div className="lg:col-span-5">
                 <div
                   className="animate-rise lg:sticky lg:top-24"

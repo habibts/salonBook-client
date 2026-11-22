@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatusBadge } from "@/components/dashboard/status-badge"
+import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import { showSuccess, showError } from "@/lib/toast"
 
 interface Appointment {
@@ -27,12 +28,11 @@ interface Appointment {
   createdAt: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
-
 export default function MyAppointmentsPage() {
   const router = useRouter()
   const { data: session } = authClient.useSession()
   const user = session?.user
+  const { expressFetch } = useExpressApi()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -43,18 +43,22 @@ export default function MyAppointmentsPage() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/appointments`)
-      if (!res.ok) throw new Error(`Failed to load appointments: ${res.status}`)
-      const data = (await res.json()) as Appointment[]
+      const data = await expressFetch<Appointment[]>("/appointments")
       setAppointments(data.filter((a) => a.customerId === user.id))
     } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to load appointments"
-      setError(message)
-      showError({ title: "Failed to Load Appointments", description: message })
+      if (e instanceof ExpressApiError && e.status === 401) {
+        setError("Your session has expired. Please sign in again.")
+      } else if (e instanceof ExpressApiError && e.status === 403) {
+        setError("Access denied.")
+      } else {
+        const message = e instanceof Error ? e.message : "Failed to load appointments"
+        setError(message)
+        showError({ title: "Failed to Load Appointments", description: message })
+      }
     } finally {
       setLoading(false)
     }
-  }, [user])
+  }, [expressFetch, user])
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -64,16 +68,20 @@ export default function MyAppointmentsPage() {
   async function cancel(id: string) {
     setCancelling(id)
     try {
-      const res = await fetch(`${API_BASE}/appointments/${id}/cancel`, { method: "PATCH" })
-      if (res.ok) {
-        showSuccess({ title: "Appointment Cancelled", description: "Your appointment has been cancelled successfully." })
-        fetchAppointments()
+      interface ApiResponse { success: boolean }
+      await expressFetch<ApiResponse>(`/appointments/${id}/cancel`, { method: "PATCH" })
+      showSuccess({ title: "Appointment Cancelled", description: "Your appointment has been cancelled successfully." })
+      fetchAppointments()
+    } catch (e) {
+      if (e instanceof ExpressApiError && e.status === 401) {
+        showError({ title: "Session Expired", description: "Your session has expired. Please sign in again." })
+      } else if (e instanceof ExpressApiError && e.status === 403) {
+        showError({ title: "Access Denied", description: "You do not have permission to cancel this appointment." })
+      } else if (e instanceof ExpressApiError && e.status === 400) {
+        showError({ title: "Cannot Cancel", description: e.message })
       } else {
-        const errorData = await res.json().catch(() => ({}))
-        showError({ title: "Cancellation Failed", description: errorData.error || "Failed to cancel appointment. Please try again." })
+        showError({ title: "Cancellation Failed", description: e instanceof Error ? e.message : "Failed to cancel appointment. Please try again." })
       }
-    } catch {
-      showError({ title: "Cancellation Failed", description: "Network error. Please try again." })
     } finally {
       setCancelling(null)
     }
@@ -172,17 +180,17 @@ export default function MyAppointmentsPage() {
                   </div>
 
                   <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-1.5">
-                      <CalendarDays className="size-3.5 text-gold" aria-hidden="true" />
-                      {a.appointmentDate}
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <Clock className="size-3.5 text-gold" aria-hidden="true" />
-                      {a.appointmentTime} · {a.duration} min
-                    </span>
-                    <span className="inline-flex items-center gap-1.5">
-                      <CreditCard className="size-3.5 text-gold" aria-hidden="true" />${a.price}
-                    </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <CalendarDays className="size-3.5 text-gold" aria-hidden="true" />
+                          {a.appointmentDate}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock className="size-3.5 text-gold" aria-hidden="true" />
+                          {a.appointmentTime} · {a.duration} min
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <CreditCard className="size-3.5 text-gold" aria-hidden="true" />${a.price}
+                        </span>
                   </div>
                 </div>
 

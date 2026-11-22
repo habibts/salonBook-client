@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { authClient } from "@/lib/auth-client"
+import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import { showSuccess, showError } from "@/lib/toast"
 
 interface Service {
@@ -31,7 +32,7 @@ function BookingContent() {
   const router = useRouter()
   const { data: session } = authClient.useSession()
   const user = session?.user
-
+  const { expressFetch } = useExpressApi()
   const [service, setService] = useState<Service | null>(null)
   const [date, setDate] = useState("")
   const [slot, setSlot] = useState("")
@@ -59,9 +60,9 @@ function BookingContent() {
     }
     setSubmitting(true)
     try {
-      const res = await fetch(`${API_BASE}/appointments`, {
+      interface ApiResponse { success: boolean }
+      await expressFetch<ApiResponse>("/appointments", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           customerId: user.id,
           customerName: user.name,
@@ -72,14 +73,20 @@ function BookingContent() {
           message,
         }),
       })
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}))
-        throw new Error(errorData.error || await res.text())
-      }
       showSuccess({ title: "Appointment Requested", description: "Your appointment request has been submitted." })
       router.push("/customer/appointments")
     } catch (e) {
-      showError({ title: "Booking Failed", description: e instanceof Error ? e.message : "Failed to book appointment. Please try again." })
+      if (e instanceof ExpressApiError && e.status === 401) {
+        showError({ title: "Session Expired", description: "Your session has expired. Please sign in again." })
+      } else if (e instanceof ExpressApiError && e.status === 403) {
+        showError({ title: "Access Denied", description: "You do not have permission to book appointments." })
+      } else if (e instanceof ExpressApiError && e.status === 409) {
+        showError({ title: "Slot Unavailable", description: e.message })
+      } else if (e instanceof ExpressApiError && e.status === 400) {
+        showError({ title: "Invalid Request", description: e.message })
+      } else {
+        showError({ title: "Booking Failed", description: e instanceof Error ? e.message : "Failed to book appointment. Please try again." })
+      }
     } finally {
       setSubmitting(false)
     }

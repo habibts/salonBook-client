@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   ArrowRight,
@@ -18,6 +18,8 @@ import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard, type StatTone } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { authClient } from "@/lib/auth-client"
+import { useExpressApi, ExpressApiError } from "@/lib/express-api"
+import { showError } from "@/lib/toast"
 
 interface Appointment {
   _id: string
@@ -31,24 +33,41 @@ interface Appointment {
   createdAt: string
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
-
 export default function CustomerDashboardPage() {
   const router = useRouter()
   const { data: session } = authClient.useSession()
   const user = session?.user
+  const { expressFetch } = useExpressApi()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchAppointments = useCallback(async () => {
+    if (!user) return
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await expressFetch<Appointment[]>("/appointments")
+      setAppointments(data.filter((a) => a.customerId === user.id))
+    } catch (e) {
+      if (e instanceof ExpressApiError && e.status === 401) {
+        setError("Your session has expired. Please sign in again.")
+      } else if (e instanceof ExpressApiError && e.status === 403) {
+        setError("Access denied.")
+      } else {
+        const message = e instanceof Error ? e.message : "Failed to load appointments"
+        setError(message)
+        showError({ title: "Failed to Load Appointments", description: message })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [expressFetch, user])
 
   useEffect(() => {
-    if (!user) return
-    fetch(`${API_BASE}/appointments`)
-      .then((r) => r.json())
-      .then((data: Appointment[]) => {
-        setAppointments(data.filter((a) => a.customerId === user.id))
-      })
-      .finally(() => setLoading(false))
-  }, [user])
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAppointments()
+  }, [fetchAppointments])
 
   const total = appointments.length
   const pending = appointments.filter((a) => a.status === "Pending").length
@@ -126,6 +145,13 @@ export default function CustomerDashboardPage() {
                 </li>
               ))}
             </ul>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/60 px-6 py-10 text-center">
+              <p className="text-sm text-destructive">{error}</p>
+              <Button onClick={fetchAppointments} className="mt-4">
+                Retry
+              </Button>
+            </div>
           ) : recent.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/60 px-6 py-10 text-center">
               <span className="flex size-12 items-center justify-center rounded-full bg-gold/10 text-gold">
