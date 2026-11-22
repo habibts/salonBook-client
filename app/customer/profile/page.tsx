@@ -9,8 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Toaster, toast } from "@/components/ui/toast"
-import { User, Mail, Calendar, IdCard, UserRound } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { User, Mail, Calendar, IdCard } from "lucide-react"
+import { showSuccess, showError } from "@/lib/toast"
 
 function getInitials(name?: string) {
   const initials = (name ?? "")
@@ -35,16 +36,17 @@ export default function ProfilePage() {
 
   async function save() {
     if (!name.trim()) {
-      toast.add({ type: "error", title: "Name required" })
+      showError({ title: "Name Required", description: "Please enter your name." })
       return
     }
     setSaving(true)
     try {
       await authClient.updateUser({ name: name.trim() })
-      toast.add({ type: "success", title: "Profile updated" })
+      showSuccess({ title: "Profile Updated", description: "Your profile has been updated successfully." })
       setOpen(false)
-    } catch {
-      toast.add({ type: "error", title: "Update failed" })
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to update profile. Please try again."
+      showError({ title: "Profile Update Failed", description: message })
     } finally {
       setSaving(false)
     }
@@ -54,11 +56,11 @@ export default function ProfilePage() {
     const file = e.target.files?.[0]
     if (!file) return
     if (!["image/jpeg","image/png","image/webp"].includes(file.type)) {
-      toast.add({ type: "error", title: "Invalid image type" })
+      showError({ title: "Invalid Image Type", description: "Only JPG, PNG, and WEBP images are allowed." })
       return
     }
     if (file.size > 5 * 1024 * 1024) {
-      toast.add({ type: "error", title: "Image too large (max 5MB)" })
+      showError({ title: "Image Too Large", description: "Maximum size is 5 MB." })
       return
     }
     const reader = new FileReader()
@@ -71,18 +73,87 @@ export default function ProfilePage() {
     setUploading(true)
     try {
       await authClient.updateUser({ image: preview })
-      toast.add({ type: "success", title: "Profile image updated" })
+      showSuccess({ title: "Profile Image Updated", description: "Your profile photo has been updated." })
       setPreview(null)
-    } catch {
-      toast.add({ type: "error", title: "Upload failed" })
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to upload image. Please try again."
+      showError({ title: "Image Upload Failed", description: message })
     } finally {
       setUploading(false)
     }
   }
 
+  if (isPending) {
+    return (
+      <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
+        <div className="rounded-2xl bg-[#171717] p-6 text-[#F1EDE5]">
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <Skeleton className="size-16 rounded-full border-2 border-[#B8955A]" />
+              <div>
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="mt-1 h-4 w-64" />
+                <Skeleton className="mt-2 h-5 w-24" />
+                <Skeleton className="h-5 w-24" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Skeleton className="h-10 w-32" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </div>
+        </div>
+
+        <Card className="border-[#DED6C8] bg-white">
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="mt-2 h-4 w-64" />
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <Skeleton className="size-5" />
+                <div>
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="mt-1 h-4 w-48" />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-[#DED6C8] bg-white">
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="mt-2 h-4 w-64" />
+          </CardHeader>
+          <CardContent className="grid gap-4 sm:grid-cols-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
+                <Skeleton className="h-3 w-32" />
+                <Skeleton className="mt-1 h-5 w-40" />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-[#DED6C8] bg-white">
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="mt-2 h-4 w-64" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-3 w-80" />
+            <Skeleton className="h-10 w-32" />
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
-      <Toaster />
       <div className="rounded-2xl bg-[#171717] p-6 text-[#F1EDE5]">
         <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">

@@ -35,6 +35,7 @@ import {
   money,
 } from "@/lib/payment"
 import { cn } from "@/lib/utils"
+import { showSuccess, showError, showWarning, showInfo } from "@/lib/toast"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 
@@ -328,6 +329,7 @@ function PaymentSuccessContent() {
   const [appointment, setAppointment] = useState<Appointment | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [attempt, setAttempt] = useState(0)
+  const [toastsShown, setToastsShown] = useState<Partial<Record<Phase, boolean>>>({})
 
   const runIdRef = useRef(0)
   const timerRef = useRef<number | null>(null)
@@ -412,6 +414,35 @@ function PaymentSuccessContent() {
 
     void run()
   }, [appointmentId, declined])
+
+  // Show toasts when phase changes to terminal states
+  useEffect(() => {
+    if (phase === "paid" && !toastsShown.paid) {
+      showSuccess({ title: "Payment Successful", description: "Your payment has been confirmed." })
+      setTimeout(() => setToastsShown((prev) => ({ ...prev, paid: true })), 0)
+    }
+  }, [phase, toastsShown.paid])
+
+  useEffect(() => {
+    if (phase === "declined" && !toastsShown.declined) {
+      showInfo({ title: "Checkout Cancelled", description: "No payment was completed during this checkout." })
+      setTimeout(() => setToastsShown((prev) => ({ ...prev, declined: true })), 0)
+    }
+  }, [phase, toastsShown.declined])
+
+  useEffect(() => {
+    if (phase === "error" && !toastsShown.error) {
+      showError({ title: "We Couldn't Verify Your Payment", description: error ?? "Something went wrong while confirming your payment. Please try again." })
+      setTimeout(() => setToastsShown((prev) => ({ ...prev, error: true })), 0)
+    }
+  }, [phase, toastsShown.error, error])
+
+  useEffect(() => {
+    if (phase === "missing" && !toastsShown.missing) {
+      showWarning({ title: "Missing Appointment Reference", description: "We couldn't tell which appointment this payment belongs to." })
+      setTimeout(() => setToastsShown((prev) => ({ ...prev, missing: true })), 0)
+    }
+  }, [phase, toastsShown.missing])
 
   useEffect(() => {
     verify()

@@ -1,9 +1,9 @@
 "use client"
 
 import { useCallback, useRef, useState } from "react"
-import { Toaster, toast } from "@/components/ui/toast"
 import { Upload, X, RefreshCw } from "lucide-react"
 import { getTokenData } from "@/lib/token-store"
+import { showSuccess, showError } from "@/lib/toast"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 
@@ -48,7 +48,7 @@ export function ImageUploader({
 
     const token = getTokenData()?.token
     if (!token) {
-      toast.add({ type: "error", title: "Not authenticated", description: "Please sign in to upload images." })
+      showError({ title: "Not Authenticated", description: "Please sign in to upload images." })
       return
     }
 
@@ -72,12 +72,12 @@ export function ImageUploader({
           if (data.url) {
             setPreview(data.url)
             onChange(data.url)
-            toast.add({ type: "success", title: "Image uploaded" })
+            showSuccess({ title: "Image Uploaded", description: "Service image has been updated." })
           } else {
-            toast.add({ type: "error", title: "Upload failed", description: "No image URL returned." })
+            showError({ title: "Upload Failed", description: "No image URL returned." })
           }
         } catch {
-          toast.add({ type: "error", title: "Upload failed", description: "Invalid server response." })
+          showError({ title: "Upload Failed", description: "Invalid server response." })
         }
       } else {
         let message = "Upload failed"
@@ -85,14 +85,14 @@ export function ImageUploader({
           const err = JSON.parse(xhr.responseText) as { error?: string }
           if (err.error) message = err.error
         } catch {}
-        toast.add({ type: "error", title: "Upload failed", description: message })
+        showError({ title: "Upload Failed", description: message })
       }
       setUploading(false)
       setProgress(0)
     })
 
     xhr.addEventListener("error", () => {
-      toast.add({ type: "error", title: "Upload failed", description: "Network error." })
+      showError({ title: "Upload Failed", description: "Network error." })
       setUploading(false)
       setProgress(0)
     })
@@ -108,18 +108,16 @@ export function ImageUploader({
       if (!selected) return
 
       if (!ALLOWED_TYPES.includes(selected.type)) {
-        toast.add({
-          type: "error",
-          title: "Invalid file type",
+        showError({
+          title: "Invalid File Type",
           description: "Only JPG, JPEG, PNG and WEBP images are allowed.",
         })
         return
       }
 
       if (selected.size > maxSize) {
-        toast.add({
-          type: "error",
-          title: "File too large",
+        showError({
+          title: "File Too Large",
           description: `Maximum size is ${Math.round(maxSize / 1024 / 1024)} MB.`,
         })
         return
@@ -137,8 +135,6 @@ export function ImageUploader({
 
   return (
     <div className="space-y-3">
-      <Toaster />
-
       <div
         className={
           "relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all" +

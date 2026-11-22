@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { authClient } from "@/lib/auth-client"
 import { ServiceCard } from "@/components/service-card"
+import { showError } from "@/lib/toast"
 
 interface Service {
   _id: string
@@ -39,12 +40,13 @@ export default function ServiceDetailsPage() {
 
   useEffect(() => {
     const controller = new AbortController()
-    setLoading(true)
-    setError(null)
-    setService(null)
-    setAllServices([])
 
     async function fetchServices() {
+      setLoading(true)
+      setError(null)
+      setService(null)
+      setAllServices([])
+
       try {
         const res = await fetch(`${API_BASE}/services`, {
           signal: controller.signal,
@@ -59,7 +61,9 @@ export default function ServiceDetailsPage() {
         else setService(found)
       } catch (e) {
         if (controller.signal.aborted) return
-        setError(e instanceof Error ? e.message : "Something went wrong")
+        const message = e instanceof Error ? e.message : "Something went wrong"
+        setError(message)
+        showError({ title: "Failed to Load Service", description: message })
       } finally {
         if (!controller.signal.aborted) setLoading(false)
       }
@@ -86,8 +90,45 @@ export default function ServiceDetailsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Skeleton className="h-96 w-full" />
+      <div className="bg-[#F7F5F0]">
+        <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          <Skeleton className="h-4 w-48 mb-6" />
+          <Skeleton className="aspect-[16/7] w-full rounded-2xl mb-6" />
+          <div className="rounded-2xl bg-[#292929] p-8">
+            <Skeleton className="h-4 w-48 mb-3" />
+            <Skeleton className="h-5 w-32 mb-4" />
+            <Skeleton className="h-8 w-3/4 mb-4" />
+            <Skeleton className="h-12 w-full mb-6" />
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-6">
+                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-5 w-16" />
+              </div>
+              <Skeleton className="w-full h-11 sm:w-auto" />
+            </div>
+          </div>
+          <div className="mt-12">
+            <Skeleton className="h-6 w-48 mb-4" />
+            <div className="rounded-xl border border-[#E9E3D8] bg-white p-6 space-y-3">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-4 w-1/3" />
+            </div>
+          </div>
+          <div className="mt-12">
+            <Skeleton className="h-6 w-48 mb-4" />
+            <div className="grid gap-4 sm:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-[#E9E3D8] bg-white p-6 text-center">
+                  <Skeleton className="mx-auto size-8 mb-3" />
+                  <Skeleton className="h-5 w-3/4 mb-1" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }

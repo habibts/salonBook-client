@@ -20,12 +20,12 @@ import {
 } from "lucide-react"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Toaster, toast } from "@/components/ui/toast"
 import { authClient, clearJWT } from "@/lib/auth-client"
 import { expressLogout } from "@/lib/express-api"
 import { useTokenStore } from "@/lib/token-store"
 import type { DashboardRole } from "@/lib/roles"
 import { cn } from "@/lib/utils"
+import { showError } from "@/lib/toast"
 
 interface NavItem {
   label: string
@@ -290,19 +290,11 @@ function DashboardShell({ role, children }: DashboardShellProps) {
       clearTokenData()
 
       if (error) {
-        toast.add({
-          type: "error",
-          title: "Could not sign out",
-          description: error.message ?? "Please try again.",
-        })
+        showError({ title: "Could not sign out", description: error.message ?? "Please try again." })
         setLoggingOut(false)
       }
     } catch {
-      toast.add({
-        type: "error",
-        title: "Could not sign out",
-        description: "Something went wrong. Please try again.",
-      })
+      showError({ title: "Could not sign out", description: "Something went wrong. Please try again." })
       setLoggingOut(false)
     }
   }
@@ -406,9 +398,6 @@ function DashboardShell({ role, children }: DashboardShellProps) {
           </div>
         </div>
       )}
-
-      {/* Toasts for the whole dashboard */}
-      <Toaster />
     </div>
   )
 }

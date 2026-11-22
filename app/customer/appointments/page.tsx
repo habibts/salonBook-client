@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { CalendarDays, Clock, CreditCard, Scissors } from "lucide-react"
 
@@ -9,9 +9,9 @@ import { Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Toaster, toast } from "@/components/ui/toast"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatusBadge } from "@/components/dashboard/status-badge"
+import { showSuccess, showError } from "@/lib/toast"
 
 interface Appointment {
   _id: string
@@ -35,34 +35,52 @@ export default function MyAppointmentsPage() {
   const user = session?.user
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [cancelling, setCancelling] = useState<string | null>(null)
 
-  async function fetchAppointments() {
+  const fetchAppointments = useCallback(async () => {
     if (!user) return
     setLoading(true)
-    const res = await fetch(`${API_BASE}/appointments`)
-    const data = (await res.json()) as Appointment[]
-    setAppointments(data.filter((a) => a.customerId === user.id))
-    setLoading(false)
-  }
-
-  useEffect(() => {
-    fetchAppointments()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setError(null)
+    try {
+      const res = await fetch(`${API_BASE}/appointments`)
+      if (!res.ok) throw new Error(`Failed to load appointments: ${res.status}`)
+      const data = (await res.json()) as Appointment[]
+      setAppointments(data.filter((a) => a.customerId === user.id))
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to load appointments"
+      setError(message)
+      showError({ title: "Failed to Load Appointments", description: message })
+    } finally {
+      setLoading(false)
+    }
   }, [user])
 
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchAppointments()
+  }, [fetchAppointments])
+
   async function cancel(id: string) {
-    const res = await fetch(`${API_BASE}/appointments/${id}/cancel`, { method: "PATCH" })
-    if (res.ok) {
-      toast.add({ type: "success", title: "Cancelled" })
-      fetchAppointments()
-    } else {
-      toast.add({ type: "error", title: "Cancel failed" })
+    setCancelling(id)
+    try {
+      const res = await fetch(`${API_BASE}/appointments/${id}/cancel`, { method: "PATCH" })
+      if (res.ok) {
+        showSuccess({ title: "Appointment Cancelled", description: "Your appointment has been cancelled successfully." })
+        fetchAppointments()
+      } else {
+        const errorData = await res.json().catch(() => ({}))
+        showError({ title: "Cancellation Failed", description: errorData.error || "Failed to cancel appointment. Please try again." })
+      }
+    } catch {
+      showError({ title: "Cancellation Failed", description: "Network error. Please try again." })
+    } finally {
+      setCancelling(null)
     }
   }
 
   return (
     <div className="space-y-6">
-      <Toaster />
 
       <PageHeader
         eyebrow="My bookings"
@@ -70,10 +88,37 @@ export default function MyAppointmentsPage() {
         description="Every visit you have requested — confirmed, pending or already enjoyed."
       />
 
-      {loading ? (
+      {error ? (
+        <div className="rounded-xl border border-border bg-card px-6 py-10 text-center">
+          <p className="text-sm text-destructive">{error}</p>
+          <Button onClick={fetchAppointments} className="mt-4">
+            Retry
+          </Button>
+        </div>
+      ) : loading ? (
         <div className="grid gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="animate-rise transition-all duration-300">
+              <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center p-4">
+                <Skeleton className="h-24 w-full shrink-0 rounded-lg sm:w-24" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       ) : appointments.length === 0 ? (
@@ -143,12 +188,18 @@ export default function MyAppointmentsPage() {
 
                 <div className="flex shrink-0 items-center gap-2">
                   {a.status === "Pending" && (
-                    <Button variant="destructive" onClick={() => cancel(a._id)}>
-                      Cancel
+                    <Button
+                      variant="destructive"
+                      onClick={() => cancel(a._id)}
+                      disabled={cancelling === a._id}
+                    >
+                      {cancelling === a._id ? "Cancelling…" : "Cancel"}
                     </Button>
                   )}
                   {a.status === "Confirmed" && a.paymentStatus === "Unpaid" && (
-                    <Button onClick={() => router.push(`/payment?appointmentId=${a._id}`)}>Pay Now</Button>
+                    <Button onClick={() => router.push(`/payment?appointmentId=${a._id}`)}>
+                      Pay Now
+                    </Button>
                   )}
                 </div>
                 <Button
@@ -156,7 +207,7 @@ export default function MyAppointmentsPage() {
                   variant="ghost"
                   onClick={() => {
                     navigator.clipboard.writeText(a._id)
-                    toast.add({ type: "success", title: "Appointment ID copied" })
+                    showSuccess({ title: "Appointment ID Copied", description: "ID copied to clipboard." })
                   }}
                 >
                   <Copy className="size-4" />

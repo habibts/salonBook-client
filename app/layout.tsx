@@ -4,6 +4,7 @@ import "./globals.css"
 import { SiteFooter, SiteHeader } from "@/components/site-chrome"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TokenStoreProvider } from "@/lib/token-store"
+import { Toaster } from "@/components/ui/toast"
 import { cn } from "@/lib/utils"
 
 const inter = Inter({
@@ -42,6 +43,7 @@ export default function RootLayout({
             <SiteHeader />
             {children}
             <SiteFooter />
+            <Toaster />
           </TokenStoreProvider>
         </ThemeProvider>
       </body>

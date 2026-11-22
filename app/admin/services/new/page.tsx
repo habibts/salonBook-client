@@ -8,12 +8,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
-import { Toaster, toast } from "@/components/ui/toast"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import { ProtectedPageLoading } from "@/components/dashboard/protected-page-loading"
 import { useTokenStore } from "@/lib/token-store"
 import { ImageUploader } from "@/components/ui/image-uploader"
+import { showSuccess, showError } from "@/lib/toast"
 
 const categories = ["Haircut & Styling","Hair Coloring","Hair Treatment","Facial & Skincare","Makeup","Manicure & Pedicure","Spa & Massage"]
 
@@ -43,15 +43,16 @@ export default function AddServicePage() {
         method: "POST",
         body: JSON.stringify(form),
       })
-      toast.add({ type: "success", title: "Service created" })
+      showSuccess({ title: "Service Created Successfully", description: "Your new service is now available." })
       router.push("/admin/services")
     } catch (e) {
       if (e instanceof ExpressApiError && e.status === 401) {
-        toast.add({ type: "error", title: "Your session has expired. Please sign in again." })
+        showError({ title: "Session Expired", description: "Your session has expired. Please sign in again." })
       } else if (e instanceof ExpressApiError && e.status === 403) {
-        toast.add({ type: "error", title: "Access denied. Admin privileges required." })
+        showError({ title: "Access Denied", description: "Admin privileges required." })
       } else {
-        toast.add({ type: "error", title: "Create failed" })
+        const message = e instanceof Error ? e.message : "Failed to create service. Please try again."
+        showError({ title: "Service Creation Failed", description: message })
       }
     } finally {
       setSubmitting(false)
@@ -60,7 +61,6 @@ export default function AddServicePage() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
 
       <PageHeader
         eyebrow="Catalogue"
@@ -159,9 +159,16 @@ export default function AddServicePage() {
 
             <div className="flex flex-wrap gap-3 border-t border-border pt-5">
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Creating..." : "Create Service"}
+                {submitting ? (
+                  <>
+                    <span className="animate-spin mr-1">⏳</span>
+                    Creating Service…
+                  </>
+                ) : (
+                  "Create Service"
+                )}
               </Button>
-              <Button type="button" variant="outline" onClick={() => router.back()}>
+              <Button type="button" variant="outline" onClick={() => router.back()} disabled={submitting}>
                 Cancel
               </Button>
             </div>

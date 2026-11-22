@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { authClient } from "@/lib/auth-client"
-import { Toaster, toast } from "@/components/ui/toast"
+import { showSuccess, showError } from "@/lib/toast"
 
 interface Service {
   _id: string
@@ -51,7 +52,7 @@ function BookingContent() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!user || !service || !date || !slot) {
-      toast.add({ type: "error", title: "Missing fields" })
+      showError({ title: "Missing Fields", description: "Please fill in all required fields." })
       return
     }
     setSubmitting(true)
@@ -69,24 +70,63 @@ function BookingContent() {
           message,
         }),
       })
-      if (!res.ok) throw new Error(await res.text())
-      toast.add({ type: "success", title: "Booking submitted" })
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}))
+        throw new Error(errorData.error || await res.text())
+      }
+      showSuccess({ title: "Appointment Requested", description: "Your appointment request has been submitted." })
       router.push("/customer/appointments")
     } catch (e) {
-      toast.add({ type: "error", title: "Booking failed", description: String(e) })
+      showError({ title: "Booking Failed", description: e instanceof Error ? e.message : "Failed to book appointment. Please try again." })
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (loading) return <div className="container mx-auto px-4 py-8">Loading...</div>
-  if (!service) return <div className="container mx-auto px-4 py-8">Service not found</div>
+  if (loading) {
+    return (
+      <div className="container mx-auto max-w-3xl px-4 py-8">
+        <Card className="border-[#E9E3D8] bg-white">
+          <CardHeader>
+            <CardTitle className="font-heading text-[#151515]">
+              <Skeleton className="h-6 w-48" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="mb-4 aspect-[16/9] w-full rounded-lg" />
+            <p className="text-[#77736D]"><Skeleton className="h-4 w-64" /></p>
+            <form className="mt-6 space-y-4">
+              <div>
+                <label className="text-sm text-[#151515]">Date</label>
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div>
+                <label className="text-sm text-[#151515]">Time Slot</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {slots.map((s) => (
+                    <Skeleton key={s} className="h-10 w-full" />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-sm text-[#151515]">Message</label>
+                <Skeleton className="h-24 w-full" />
+              </div>
+              <Button disabled className="w-full">
+                <Skeleton className="h-10 w-full" />
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+  if (!service) return <div className="container mx-auto max-w-3xl px-4 py-8">Service not found</div>
 
   const today = new Date().toISOString().split("T")[0]
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-8">
-      <Toaster />
       <Card className="border-[#E9E3D8] bg-white">
         <CardHeader>
           <CardTitle className="font-heading text-[#151515]">{service.serviceName}</CardTitle>

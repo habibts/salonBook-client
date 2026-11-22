@@ -3,6 +3,9 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { showError } from "@/lib/toast"
 
 interface Service {
   _id: string
@@ -15,20 +18,77 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 
 export function ServiceCategories() {
   const [categories, setCategories] = useState<{ name: string; image: string }[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  async function fetchCategories() {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch(`${API_BASE}/services`)
+      if (!res.ok) throw new Error("Failed to fetch services")
+      const data = (await res.json()) as Service[]
+      const active = data.filter((s) => s.status === "active")
+      const map = new Map<string, string>()
+      active.forEach((s) => {
+        if (!map.has(s.category)) map.set(s.category, s.image)
+      })
+      setCategories(Array.from(map, ([name, image]) => ({ name, image })))
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Something went wrong"
+      setError(message)
+      showError({ title: "Failed to Load Categories", description: message })
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    fetch(`${API_BASE}/services`)
-      .then((r) => r.json())
-      .then((data: Service[]) => {
-        const active = data.filter((s) => s.status === "active")
-        const map = new Map<string, string>()
-        active.forEach((s) => {
-          if (!map.has(s.category)) map.set(s.category, s.image)
-        })
-        setCategories(Array.from(map, ([name, image]) => ({ name, image })))
-      })
-      .catch(() => setCategories([]))
+    fetchCategories()
   }, [])
+
+  if (loading) {
+    return (
+      <section className="bg-[#151515] py-16 md:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="space-y-4">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-8 w-64" />
+            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-4 w-80" />
+          </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="relative w-full overflow-hidden rounded-xl border border-[#E9E3D8] sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]"
+              >
+                <Skeleton className="aspect-[4/3] w-full" />
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <Skeleton className="h-3 w-12 mb-2" />
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="mt-2 h-4 w-24" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (error) {
+    return (
+      <section className="bg-[#151515] py-16 md:py-20">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
+          <p className="text-red-500">{error}</p>
+          <Button onClick={fetchCategories} className="mt-4">
+            Retry
+          </Button>
+        </div>
+      </section>
+    )
+  }
 
   if (categories.length === 0) return null
 

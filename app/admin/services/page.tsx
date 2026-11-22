@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +10,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Toaster, toast } from "@/components/ui/toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
@@ -18,6 +17,7 @@ import { CircleCheck, CirclePause, Layers, Plus } from "lucide-react"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import { useTokenStore } from "@/lib/token-store"
 import { ImageUploader } from "@/components/ui/image-uploader"
+import { showSuccess, showError } from "@/lib/toast"
 
 interface Service {
   _id: string
@@ -52,6 +52,7 @@ export default function ManageServicesPage() {
   const [category, setCategory] = useState("all")
   const [status, setStatus] = useState("all")
   const [toggling, setToggling] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
   const [editing, setEditing] = useState<Service | null>(null)
   const [editForm, setEditForm] = useState<ServiceFormData>({
     serviceName: "",
@@ -64,9 +65,7 @@ export default function ManageServicesPage() {
   })
   const [saving, setSaving] = useState(false)
 
-  const isLoading = isRestoring || loading
-
-  async function fetchServices() {
+  const fetchServices = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -78,16 +77,21 @@ export default function ManageServicesPage() {
       } else if (e instanceof ExpressApiError && e.status === 403) {
         setError("Access denied. Admin privileges required.")
       } else {
-        setError(e instanceof Error ? e.message : "Error")
+        const message = e instanceof Error ? e.message : "Failed to load services"
+        setError(message)
+        showError({ title: "Failed to Load Services", description: message })
       }
     } finally {
       setLoading(false)
     }
-  }
+  }, [expressFetch])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchServices()
-  }, [])
+  }, [fetchServices])
+
+  const isLoading = isRestoring || loading
 
   const categories = useMemo(() => Array.from(new Set(services.map((s) => s.category))), [services])
 
@@ -112,23 +116,27 @@ export default function ManageServicesPage() {
         method: "PATCH",
         body: JSON.stringify({ status: newStatus }),
       })
-      toast.add({ type: "success", title: "Status updated" })
+      showSuccess({ title: "Status Updated", description: `Service is now ${newStatus}.` })
       fetchServices()
-    } catch {
-      toast.add({ type: "error", title: "Update failed" })
+    } catch (e) {
+      const message = e instanceof ExpressApiError ? e.message : "Failed to update status. Please try again."
+      showError({ title: "Update Failed", description: message })
     }
     setToggling(null)
   }
 
   async function deleteService(id: string) {
+    setDeleting(id)
     try {
       interface ApiResponse { success: boolean }
       await expressFetch<ApiResponse>(`/services/${id}`, { method: "DELETE" })
-      toast.add({ type: "success", title: "Deleted" })
+      showSuccess({ title: "Service Deleted", description: "The service has been successfully removed." })
       fetchServices()
-    } catch {
-      toast.add({ type: "error", title: "Delete failed" })
+    } catch (e) {
+      const message = e instanceof ExpressApiError ? e.message : "Failed to delete service. Please try again."
+      showError({ title: "Delete Failed", description: message })
     }
+    setDeleting(null)
   }
 
   async function saveEdit() {
@@ -149,11 +157,12 @@ export default function ManageServicesPage() {
         method: "PATCH",
         body: JSON.stringify(payload),
       })
-      toast.add({ type: "success", title: "Updated" })
+      showSuccess({ title: "Service Updated Successfully", description: "Your changes have been saved." })
       setEditing(null)
       fetchServices()
-    } catch {
-      toast.add({ type: "error", title: "Update failed" })
+    } catch (e) {
+      const message = e instanceof ExpressApiError ? e.message : "Failed to update service. Please try again."
+      showError({ title: "Update Failed", description: message })
     }
     setSaving(false)
   }
@@ -167,7 +176,6 @@ export default function ManageServicesPage() {
   return (
     <>
     <div className="space-y-6">
-      <Toaster />
 
       <PageHeader
         eyebrow="Catalogue"
@@ -234,7 +242,34 @@ export default function ManageServicesPage() {
           <Button onClick={fetchServices} className="mt-4">Retry</Button>
         </div>
       ) : isLoading ? (
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <div className="overflow-x-auto rounded-xl border border-border bg-card surface-raised">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Image</TableHead>
+                <TableHead>Name</TableHead>
+                <TableHead>Category</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Duration</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-12 w-12 rounded-lg" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-8 w-32" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       ) : filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
           No services found.
@@ -290,6 +325,7 @@ export default function ManageServicesPage() {
                         }
                       >
                         {s.status === "active" ? "Active" : "Inactive"}
+                        {toggling === s._id && <span className="ml-2 text-xs text-muted-foreground">(updating…)</span>}
                       </span>
                     </div>
                   </TableCell>
@@ -304,7 +340,9 @@ export default function ManageServicesPage() {
                       </Button>
                       <AlertDialog>
                         <AlertDialogTrigger>
-                          <Button size="sm" variant="destructive">Delete</Button>
+                          <Button size="sm" variant="destructive" disabled={deleting === s._id}>
+                            {deleting === s._id ? "Deleting…" : "Delete"}
+                          </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
@@ -315,8 +353,8 @@ export default function ManageServicesPage() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteService(s._id)}>
-                              Delete
+                            <AlertDialogAction onClick={() => deleteService(s._id)} disabled={deleting === s._id}>
+                              {deleting === s._id ? "Deleting…" : "Delete"}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -371,9 +409,16 @@ export default function ManageServicesPage() {
             </div>
             <div className="flex gap-2 pt-1">
               <Button onClick={saveEdit} disabled={saving}>
-                {saving ? "Saving..." : "Save Changes"}
+                {saving ? (
+                  <>
+                    <span className="animate-spin mr-1">⏳</span>
+                    Saving Changes…
+                  </>
+                ) : (
+                  "Save Changes"
+                )}
               </Button>
-              <Button variant="outline" onClick={() => setEditing(null)}>
+              <Button variant="outline" onClick={() => setEditing(null)} disabled={saving}>
                 Cancel
               </Button>
             </div>

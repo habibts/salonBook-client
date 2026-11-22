@@ -1,16 +1,17 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Search } from "lucide-react"
-import { Receipt, CheckCircle, Clock, DollarSign } from "lucide-react"
+import { Receipt, CheckCircle, Clock, DollarSign, RotateCcw } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
-import { ProtectedPageLoading } from "@/components/dashboard/protected-page-loading"
 import { useTokenStore } from "@/lib/token-store"
+import { showSuccess, showError } from "@/lib/toast"
 
 interface Transaction {
   _id: string
@@ -45,10 +46,11 @@ export default function AdminTransactionsPage() {
   const [dateFilter, setDateFilter] = useState("all")
   const [selected, setSelected] = useState<string | null>(null)
   const [details, setDetails] = useState<TransactionDetails | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
 
   const isLoading = isRestoring || loading
 
-  async function loadTransactions() {
+  const loadTransactions = useCallback(async () => {
     try {
       setLoading(true)
       setError("")
@@ -62,22 +64,25 @@ export default function AdminTransactionsPage() {
       } else {
         setError("Failed to load transactions")
       }
+      const message = err instanceof ExpressApiError ? err.message : "Failed to load transactions"
+      showError({ title: "Failed to Load Transactions", description: message })
       setTransactions([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [expressFetch])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadTransactions()
-  }, [])
+  }, [loadTransactions])
 
   useEffect(() => {
     if (!selected) return
     expressFetch<TransactionDetails>(`/transactions/${selected}/details`)
       .then(setDetails)
       .catch(() => setDetails(null))
-  }, [selected])
+  }, [selected, expressFetch])
 
   let filtered = transactions.filter((t) => {
     const q = query.toLowerCase()
@@ -105,6 +110,19 @@ export default function AdminTransactionsPage() {
 
   function handleClose(open: boolean) { if (!open) { setSelected(null); setDetails(null) } }
 
+  async function handleRefresh() {
+    if (refreshing) return
+    setRefreshing(true)
+    try {
+      await loadTransactions()
+      showSuccess({ title: "Transactions Updated", description: "Transaction records have been refreshed." })
+    } catch {
+      showError({ title: "Refresh Failed", description: "Unable to refresh transactions. Please try again." })
+    } finally {
+      setRefreshing(false)
+    }
+  }
+
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-6 py-8">
       <div>
@@ -121,7 +139,7 @@ export default function AdminTransactionsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-[#171717]">{total}</p>
+            <p className="text-2xl font-semibold text-[#171717]">{isLoading ? <Skeleton className="h-8 w-24" /> : total}</p>
             <p className="text-xs text-[#77736D]">All recorded transactions</p>
           </CardContent>
         </Card>
@@ -133,7 +151,7 @@ export default function AdminTransactionsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-[#171717]">{success}</p>
+            <p className="text-2xl font-semibold text-[#171717]">{isLoading ? <Skeleton className="h-8 w-24" /> : success}</p>
             <p className="text-xs text-[#77736D]">Successfully completed payments</p>
           </CardContent>
         </Card>
@@ -145,7 +163,7 @@ export default function AdminTransactionsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-[#171717]">{pending}</p>
+            <p className="text-2xl font-semibold text-[#171717]">{isLoading ? <Skeleton className="h-8 w-24" /> : pending}</p>
             <p className="text-xs text-[#77736D]">Awaiting payment completion</p>
           </CardContent>
         </Card>
@@ -157,7 +175,7 @@ export default function AdminTransactionsPage() {
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-[#171717]">${revenue.toFixed(2)}</p>
+            <p className="text-2xl font-semibold text-[#171717]">{isLoading ? <Skeleton className="h-8 w-32" /> : `$${revenue.toFixed(2)}`}</p>
             <p className="text-xs text-[#77736D]">From successful payments</p>
           </CardContent>
         </Card>
@@ -187,10 +205,55 @@ export default function AdminTransactionsPage() {
           <option value="lowest">Lowest Amount</option>
         </select>
         <Button variant="outline" onClick={() => { setQuery(""); setStatusFilter("all"); setDateFilter("all"); setSort("newest") }}>Reset</Button>
+        <Button variant="outline" onClick={handleRefresh} disabled={refreshing || isLoading}>
+          {refreshing ? (
+            <>
+              <RotateCcw className="size-4 mr-2 animate-spin" />
+              Refreshing…
+            </>
+          ) : (
+            <>
+              <RotateCcw className="size-4 mr-2" />
+              Refresh
+            </>
+          )}
+        </Button>
       </div>
 
-      {error ? <p className="text-red-600">{error}</p> : isLoading ? (
-        <ProtectedPageLoading />
+      {error ? (
+        <div className="rounded-xl border border-[#DED6C8] bg-white px-6 py-10 text-center">
+          <p className="text-sm text-red-600">{error}</p>
+          <Button onClick={loadTransactions} className="mt-4">
+            Retry
+          </Button>
+        </div>
+      ) : isLoading ? (
+        <div className="overflow-x-auto rounded-xl border border-[#DED6C8] bg-white">
+          <table className="w-full text-sm">
+            <thead className="bg-[#F1EDE5]">
+              <tr>
+                <th className="p-3 text-left">Transaction ID</th>
+                <th className="p-3 text-left">Appointment</th>
+                <th className="p-3 text-left">Amount</th>
+                <th className="p-3 text-left">Status</th>
+                <th className="p-3 text-left">Date</th>
+                <th className="p-3 text-left">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="border-t border-[#DED6C8]">
+                  <td className="p-3"><Skeleton className="h-4 w-48" /></td>
+                  <td className="p-3"><Skeleton className="h-4 w-32" /></td>
+                  <td className="p-3"><Skeleton className="h-4 w-24" /></td>
+                  <td className="p-3"><Skeleton className="h-6 w-24" /></td>
+                  <td className="p-3"><Skeleton className="h-4 w-40" /></td>
+                  <td className="p-3"><Skeleton className="h-8 w-28" /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (filtered.length === 0 ? (
         <div className="rounded-xl border border-[#DED6C8] bg-white p-12 text-center">
           <Receipt className="mx-auto size-10 text-[#B8955A]" />

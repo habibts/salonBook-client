@@ -18,6 +18,8 @@ import { authClient, clearJWT } from "@/lib/auth-client"
 import { expressLogout } from "@/lib/express-api"
 import { useTokenStore } from "@/lib/token-store"
 import { cn } from "@/lib/utils"
+import { Spinner } from "@/components/ui/spinner"
+import { showSuccess, showError } from "@/lib/toast"
 
 const publicLinks = [
   { label: "Home", href: "/" },
@@ -60,8 +62,12 @@ function getInitials(name: string) {
 function AccountMenu({ user }: { user: SessionUser }) {
   const router = useRouter()
   const { tokenData, clearTokenData } = useTokenStore()
+  const [signingOut, setSigningOut] = useState(false)
 
   async function handleSignOut() {
+    if (signingOut) return
+    setSigningOut(true)
+
     try {
       const token = tokenData?.token
       await authClient.signOut({
@@ -76,8 +82,11 @@ function AccountMenu({ user }: { user: SessionUser }) {
         await expressLogout(token)
       }
       clearTokenData()
+      showSuccess({ title: "Logged Out Successfully", description: "You have been safely signed out." })
     } catch {
-      // Sign-out failed — the session stays active and the Navbar is unchanged.
+      showError({ title: "Sign Out Failed", description: "Unable to sign out. Please try again." })
+    } finally {
+      setSigningOut(false)
     }
   }
 
@@ -122,10 +131,18 @@ function AccountMenu({ user }: { user: SessionUser }) {
         <DropdownMenuItem
           closeOnClick
           onClick={handleSignOut}
-          className="cursor-pointer gap-2.5 px-2.5 py-2 text-ivory hover:bg-gold/10 hover:text-gold focus:bg-gold/10 focus:text-gold"
+          disabled={signingOut}
+          className="cursor-pointer gap-2.5 px-2.5 py-2 text-ivory hover:bg-gold/10 hover:text-gold focus:bg-gold/10 focus:text-gold disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <LogOut />
-          Sign Out
+          {signingOut ? (
+            <>
+              <Spinner className="size-4" />
+              Signing Out…
+            </>
+          ) : (
+            "Sign Out"
+          )}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

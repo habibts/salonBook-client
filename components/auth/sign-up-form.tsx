@@ -2,15 +2,14 @@
 
 import { useState, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
-import { CircleAlert } from "lucide-react"
 
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { Spinner } from "@/components/ui/spinner"
 import { authClient, issueJWT } from "@/lib/auth-client"
 import { useTokenStore } from "@/lib/token-store"
+import { showSuccess, showError } from "@/lib/toast"
 
 const MAX_IMAGE_SIZE = 2 * 1024 * 1024 // 2 MB
 
@@ -27,13 +26,11 @@ function fileToDataUrl(file: File): Promise<string> {
 function SignUpForm() {
   const router = useRouter()
   const { setTokenData } = useTokenStore()
-  const [error, setError] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (pending) return
-    setError(null)
 
     const form = new FormData(event.currentTarget)
     const name = String(form.get("name") ?? "").trim()
@@ -42,7 +39,7 @@ function SignUpForm() {
     const imageFile = form.get("profile-image")
 
     if (imageFile instanceof File && imageFile.size > MAX_IMAGE_SIZE) {
-      setError("Profile image must be 2 MB or smaller.")
+      showError({ title: "Image Too Large", description: "Profile image must be 2 MB or smaller." })
       return
     }
 
@@ -61,23 +58,22 @@ function SignUpForm() {
       })
 
       if (signUpError) {
-        setError(
-          signUpError.message ??
-            "Could not create your account. Please try again."
-        )
+        const message = signUpError.message ?? "Could not create your account. Please try again."
+        showError({ title: "Sign Up Failed", description: message })
         return
       }
 
       const { data, error: jwtError } = await issueJWT()
       if (jwtError || !data) {
-        setError(jwtError ?? "Failed to obtain authentication token.")
+        showError({ title: "Authentication Error", description: jwtError ?? "Failed to obtain authentication token." })
         return
       }
 
       setTokenData(data)
+      showSuccess({ title: "Account Created Successfully", description: "Your account has been created successfully." })
       router.push("/")
     } catch {
-      setError("Something went wrong. Please try again.")
+      showError({ title: "Sign Up Failed", description: "Something went wrong. Please try again." })
     } finally {
       setPending(false)
     }
@@ -140,16 +136,6 @@ function SignUpForm() {
           className="text-muted-gray file:mr-3 file:h-7 file:rounded-md file:border-0 file:bg-champagne file:px-3 file:text-sm file:font-medium file:text-midnight hover:file:bg-gold/80"
         />
       </Field>
-
-      {error && (
-        <Alert
-          variant="destructive"
-          className="border-destructive/30 bg-destructive/10"
-        >
-          <CircleAlert />
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
 
       <Button
         type="submit"

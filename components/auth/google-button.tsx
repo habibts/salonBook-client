@@ -4,6 +4,8 @@ import { useState } from "react"
 import { buttonVariants } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { authClient } from "@/lib/auth-client"
+import { Spinner } from "@/components/ui/spinner"
+import { showError } from "@/lib/toast"
 
 function GoogleButton({ className }: { className?: string }) {
   const [pending, setPending] = useState(false)
@@ -19,11 +21,12 @@ function GoogleButton({ className }: { className?: string }) {
       })
 
       if (error) {
-        console.error("Google sign-in error:", error)
+        const message = error.message ?? "Failed to connect to Google. Please try again."
+        showError({ title: "Google Sign-In Failed", description: message })
         return
       }
-    } catch (err) {
-      console.error("Google sign-in failed:", err)
+    } catch {
+      showError({ title: "Google Sign-In Failed", description: "Unable to start Google sign-in. Please try again." })
     } finally {
       setPending(false)
     }
@@ -58,7 +61,14 @@ function GoogleButton({ className }: { className?: string }) {
           d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
         />
       </svg>
-      {pending ? "Connecting…" : "Continue with Google"}
+      {pending ? (
+        <>
+          <Spinner />
+          Connecting…
+        </>
+      ) : (
+        "Continue with Google"
+      )}
     </button>
   )
 }

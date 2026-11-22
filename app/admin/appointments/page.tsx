@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -8,13 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Toaster, toast } from "@/components/ui/toast"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { BadgeCheck, CalendarCheck, CalendarDays, Clock, XCircle } from "lucide-react"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import { useTokenStore } from "@/lib/token-store"
+import { showSuccess, showError } from "@/lib/toast"
 
 interface Appointment {
   _id: string
@@ -43,24 +43,26 @@ export default function AdminAppointmentsPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selected, setSelected] = useState<Appointment | null>(null)
-  const [confirming, setConfirming] = useState(false)
+  const [confirming, setConfirming] = useState<string | null>(null)
+  const [cancelling, setCancelling] = useState<string | null>(null)
 
   const isLoading = isRestoring || loading
 
   async function confirmAppointment(id: string) {
-    setConfirming(true)
+    setConfirming(id)
     try {
       interface ApiResponse { success: boolean }
       await expressFetch<ApiResponse>(`/appointments/${id}/confirm`, { method: "PATCH" })
-      toast.add({ type: "success", title: "Confirmed" })
+      showSuccess({ title: "Appointment Confirmed", description: "The appointment has been confirmed." })
       fetchAppointments()
-    } catch {
-      toast.add({ type: "error", title: "Confirm failed" })
+    } catch (e) {
+      const message = e instanceof ExpressApiError ? e.message : "Failed to confirm appointment. Please try again."
+      showError({ title: "Confirm Failed", description: message })
     }
-    setConfirming(false)
+    setConfirming(null)
   }
 
-  async function fetchAppointments() {
+  const fetchAppointments = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -72,16 +74,18 @@ export default function AdminAppointmentsPage() {
       } else if (e instanceof ExpressApiError && e.status === 403) {
         setError("Access denied. Admin privileges required.")
       } else {
-        setError(e instanceof Error ? e.message : "Error")
+        const message = e instanceof Error ? e.message : "Failed to load appointments"
+        setError(message)
+        showError({ title: "Failed to Load Appointments", description: message })
       }
     } finally {
       setLoading(false)
     }
-  }
+  }, [expressFetch])
 
   useEffect(() => {
     fetchAppointments()
-  }, [])
+  }, [fetchAppointments])
 
   const filtered = useMemo(() => {
     let list = appointments
@@ -104,14 +108,17 @@ export default function AdminAppointmentsPage() {
   const cancelled = appointments.filter((a) => a.status === "Cancelled").length
 
   async function cancel(id: string) {
+    setCancelling(id)
     try {
       interface ApiResponse { success: boolean }
       await expressFetch<ApiResponse>(`/appointments/${id}/cancel`, { method: "PATCH" })
-      toast.add({ type: "success", title: "Cancelled" })
+      showSuccess({ title: "Appointment Cancelled", description: "The appointment has been cancelled." })
       fetchAppointments()
-    } catch {
-      toast.add({ type: "error", title: "Cancel failed" })
+    } catch (e) {
+      const message = e instanceof ExpressApiError ? e.message : "Failed to cancel appointment. Please try again."
+      showError({ title: "Cancel Failed", description: message })
     }
+    setCancelling(null)
   }
 
   const stats = [
@@ -124,7 +131,6 @@ export default function AdminAppointmentsPage() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
 
       <PageHeader
         eyebrow="Bookings"
@@ -177,7 +183,36 @@ export default function AdminAppointmentsPage() {
           </Button>
         </div>
       ) : isLoading ? (
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <div className="overflow-x-auto rounded-xl border border-border bg-card surface-raised">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Customer</TableHead>
+                <TableHead>Service</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-48" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-8 w-40" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       ) : filtered.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
           No appointments match your search or filters.
@@ -227,7 +262,7 @@ export default function AdminAppointmentsPage() {
                   <TableCell>
                     <StatusBadge status={a.status} />
                   </TableCell>
-                  <TableCell>
+<TableCell>
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => setSelected(a)}>
                         View
@@ -236,7 +271,13 @@ export default function AdminAppointmentsPage() {
                         <>
                           <AlertDialog>
                             <AlertDialogTrigger>
-                              <Button size="sm" className="bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]">Confirm</Button>
+                              <Button
+                                size="sm"
+                                className="bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]"
+                                disabled={confirming === a._id}
+                              >
+                                {confirming === a._id ? "Confirming…" : "Confirm"}
+                              </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
@@ -245,28 +286,29 @@ export default function AdminAppointmentsPage() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction disabled={confirming} onClick={() => confirmAppointment(a._id)}>Confirm</AlertDialogAction>
+                                <AlertDialogAction disabled={confirming === a._id} onClick={() => confirmAppointment(a._id)}>
+                                  {confirming === a._id ? "Confirming…" : "Confirm"}
+                                </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
                           </AlertDialog>
                           <AlertDialog>
-
-                          <AlertDialogTrigger>
-                            <Button size="sm" variant="destructive">
-                              Cancel
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Cancel Appointment?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to cancel this appointment?
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-<AlertDialogFooter>
+                            <AlertDialogTrigger>
+                              <Button size="sm" variant="destructive" disabled={cancelling === a._id}>
+                                {cancelling === a._id ? "Cancelling…" : "Cancel"}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Cancel Appointment?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to cancel this appointment?
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
                                 <AlertDialogCancel>Keep Appointment</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => cancel(a._id)}>
-                                  Confirm Cancellation
+                                <AlertDialogAction disabled={cancelling === a._id} onClick={() => cancel(a._id)}>
+                                  {cancelling === a._id ? "Cancelling…" : "Confirm Cancellation"}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState, useCallback } from "react"
 import { authClient } from "@/lib/auth-client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,13 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Skeleton } from "@/components/ui/skeleton"
-import { Toaster, toast } from "@/components/ui/toast"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { ShieldCheck, UserCheck, UserRound, Users, UserX } from "lucide-react"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import { useTokenStore } from "@/lib/token-store"
+import { showSuccess, showError } from "@/lib/toast"
 
 interface User {
   _id: string
@@ -43,10 +43,12 @@ export default function ManageUsersPage() {
   const [roleFilter, setRoleFilter] = useState("all")
   const [page, setPage] = useState(1)
   const [selected, setSelected] = useState<User | null>(null)
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [deletingUser, setDeletingUser] = useState<string | null>(null)
 
   const isLoading = isRestoring || loading
 
-  async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -58,16 +60,19 @@ export default function ManageUsersPage() {
       } else if (e instanceof ExpressApiError && e.status === 403) {
         setError("Access denied. Admin privileges required.")
       } else {
-        setError(e instanceof Error ? e.message : "Error")
+        const message = e instanceof Error ? e.message : "Failed to load users"
+        setError(message)
+        showError({ title: "Failed to Load Users", description: message })
       }
     } finally {
       setLoading(false)
     }
-  }
+  }, [expressFetch])
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchUsers()
-  }, [])
+  }, [fetchUsers])
 
   const filtered = useMemo(() => {
     let list = users
@@ -94,28 +99,35 @@ export default function ManageUsersPage() {
   }
 
   async function updateStatus(id: string, status: string) {
+    setUpdatingStatus(id)
     try {
       interface ApiResponse { success: boolean }
       await expressFetch<ApiResponse>(`/users/${id}/status`, {
         method: "PATCH",
         body: JSON.stringify({ status }),
       })
-      toast.add({ type: "success", title: "Updated" })
+      const action = status === "blocked" ? "blocked" : "unblocked"
+      showSuccess({ title: `User ${action.charAt(0).toUpperCase() + action.slice(1)}`, description: `User has been ${action}.` })
       fetchUsers()
-    } catch {
-      toast.add({ type: "error", title: "Update failed" })
+    } catch (e) {
+      const message = e instanceof ExpressApiError ? e.message : "Failed to update user status. Please try again."
+      showError({ title: "Update Failed", description: message })
     }
+    setUpdatingStatus(null)
   }
 
   async function deleteUser(id: string) {
+    setDeletingUser(id)
     try {
       interface ApiResponse { success: boolean }
       await expressFetch<ApiResponse>(`/users/${id}`, { method: "DELETE" })
-      toast.add({ type: "success", title: "Deleted" })
+      showSuccess({ title: "User Deleted", description: "The user has been permanently removed." })
       fetchUsers()
-    } catch {
-      toast.add({ type: "error", title: "Delete failed" })
+    } catch (e) {
+      const message = e instanceof ExpressApiError ? e.message : "Failed to delete user. Please try again."
+      showError({ title: "Delete Failed", description: message })
     }
+    setDeletingUser(null)
   }
 
   function canModify(u: User) {
@@ -135,7 +147,6 @@ export default function ManageUsersPage() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
 
       <PageHeader
         eyebrow="People"
@@ -197,7 +208,37 @@ export default function ManageUsersPage() {
           <Button onClick={fetchUsers} className="mt-4">Retry</Button>
         </div>
       ) : isLoading ? (
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <div className="overflow-x-auto rounded-xl border border-border bg-card surface-raised">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <TableRow key={i}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="size-9 rounded-full" />
+                      <Skeleton className="h-4 w-48" />
+                    </div>
+                  </TableCell>
+                  <TableCell><Skeleton className="h-4 w-56" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-4 w-32" /></TableCell>
+                  <TableCell><Skeleton className="h-6 w-28" /></TableCell>
+                  <TableCell><Skeleton className="h-8 w-40" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       ) : paged.length === 0 ? (
         <p className="rounded-xl border border-dashed border-border bg-card px-6 py-10 text-center text-sm text-muted-foreground">
           No users found.
@@ -257,7 +298,13 @@ export default function ManageUsersPage() {
                           {(u.status ?? "active") === "active" ? (
                             <AlertDialog>
                               <AlertDialogTrigger>
-                                <Button size="sm" variant="destructive">Block</Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  disabled={updatingStatus === u._id}
+                                >
+                                  {updatingStatus === u._id ? "Blocking…" : "Block"}
+                                </Button>
                               </AlertDialogTrigger>
                               <AlertDialogContent>
                                 <AlertDialogHeader>
@@ -268,20 +315,33 @@ export default function ManageUsersPage() {
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => updateStatus(u._id, "blocked")}>
-                                    Confirm Block
+                                  <AlertDialogAction
+                                    disabled={updatingStatus === u._id}
+                                    onClick={() => updateStatus(u._id, "blocked")}
+                                  >
+                                    {updatingStatus === u._id ? "Blocking…" : "Confirm Block"}
                                   </AlertDialogAction>
                                 </AlertDialogFooter>
                               </AlertDialogContent>
                             </AlertDialog>
                           ) : (
-                            <Button size="sm" onClick={() => updateStatus(u._id, "active")}>
-                              Unblock
+                            <Button
+                              size="sm"
+                              onClick={() => updateStatus(u._id, "active")}
+                              disabled={updatingStatus === u._id}
+                            >
+                              {updatingStatus === u._id ? "Unblocking…" : "Unblock"}
                             </Button>
                           )}
                           <AlertDialog>
                             <AlertDialogTrigger>
-                              <Button size="sm" variant="destructive">Delete</Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                disabled={deletingUser === u._id}
+                              >
+                                {deletingUser === u._id ? "Deleting…" : "Delete"}
+                              </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
@@ -290,8 +350,11 @@ export default function ManageUsersPage() {
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteUser(u._id)}>
-                                  Delete
+                                <AlertDialogAction
+                                  disabled={deletingUser === u._id}
+                                  onClick={() => deleteUser(u._id)}
+                                >
+                                  {deletingUser === u._id ? "Deleting…" : "Delete"}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>

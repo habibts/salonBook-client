@@ -46,6 +46,7 @@ import {
   money,
 } from "@/lib/payment"
 import { cn } from "@/lib/utils"
+import { showError } from "@/lib/toast"
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY as string
@@ -277,8 +278,10 @@ function CheckoutForm({
       redirect: "if_required",
     })
     if (result.error) {
-      setMessage(result.error.message ?? "Payment failed")
+      const errorMessage = result.error.message ?? "Payment failed"
+      setMessage(errorMessage)
       setSucceeded(false)
+      showError({ title: "Payment Failed", description: errorMessage })
     } else {
       // Payment went through (or Stripe is finalising it). Either way the
       // browser is not navigating away on its own (`redirect: "if_required"`),
@@ -485,12 +488,26 @@ function PaymentPageContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ appointmentId }),
       })
-      if (!res.ok) throw new Error(await res.text())
+      if (!res.ok) {
+        let errorMessage = "Failed to create payment session"
+        if (res.status === 401) {
+          errorMessage = "Your session has expired. Please sign in again."
+        } else if (res.status === 403) {
+          errorMessage = "This appointment is not eligible for payment."
+        } else if (res.status === 409) {
+          errorMessage = "This appointment has already been paid."
+        } else if (res.status === 404) {
+          errorMessage = "Appointment not found."
+        }
+        throw new Error(errorMessage)
+      }
       const data = await res.json()
       setClientSecret(data.clientSecret)
       setStep("checkout")
     } catch (e) {
-      setCheckoutError(String(e))
+      const message = e instanceof Error ? e.message : "Unable to start payment. Please try again."
+      setCheckoutError(message)
+      showError({ title: "Payment Session Failed", description: message })
     } finally {
       setCreating(false)
     }

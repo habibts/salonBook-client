@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ServiceCard } from "@/components/service-card"
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
+import { showError } from "@/lib/toast"
 
 interface Service {
   _id: string
@@ -47,7 +49,9 @@ function ServicesPageContent() {
       const data = (await res.json()) as Service[]
       setServices(data)
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong")
+      const message = e instanceof Error ? e.message : "Something went wrong"
+      setError(message)
+      showError({ title: "Failed to Load Services", description: message })
     } finally {
       setLoading(false)
     }
@@ -138,7 +142,23 @@ function ServicesPageContent() {
         {loading ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-80 w-full" />
+              <Card key={i} className="flex h-full flex-col overflow-hidden border-[#3A3834] bg-[#292929]">
+                <Skeleton className="aspect-[16/9] w-full" />
+                <CardHeader className="flex-1 p-4">
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-5 w-20" />
+                </CardHeader>
+                <CardContent className="flex flex-1 flex-col p-4">
+                  <Skeleton className="h-12 w-full mb-3" />
+                  <div className="mt-auto flex items-center justify-between pt-3">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </CardContent>
+                <CardFooter className="mt-auto p-4">
+                  <Skeleton className="h-10 w-full" />
+                </CardFooter>
+              </Card>
             ))}
           </div>
         ) : error ? (
