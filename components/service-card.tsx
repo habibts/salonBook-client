@@ -23,27 +23,27 @@ export function ServiceCard({ service }: { service: Service }) {
   const [imageError, setImageError] = useState(false)
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden border-[#3A3834] bg-[#292929] text-[#F7F5F0]">
+    <Card className="group flex h-full flex-col border-border bg-card text-card-foreground hover:-translate-y-1 hover:border-gold/60 hover:surface-floating">
       <img
         src={imageError ? PLACEHOLDER_IMAGE : service.image}
         alt={service.serviceName}
-        className="aspect-[16/9] w-full object-cover"
+        className="aspect-[16/9] w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]"
         onError={() => setImageError(true)}
       />
       <CardHeader className="flex-1">
-        <CardTitle className="line-clamp-2 font-heading text-[#F7F5F0]">{service.serviceName}</CardTitle>
-        <Badge className="bg-[#C5A46D]/10 text-[#C5A46D]">{service.category}</Badge>
+        <CardTitle className="line-clamp-2 font-heading text-foreground">{service.serviceName}</CardTitle>
+        <Badge className="border-gold/30 bg-gold/10 text-charcoal dark:text-gold">{service.category}</Badge>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
-        <p className="line-clamp-3 text-sm text-[#C7C2B9]">{service.description}</p>
+        <p className="line-clamp-3 text-sm leading-6 text-muted-foreground">{service.description}</p>
         <div className="mt-auto flex items-center justify-between pt-3 text-sm">
-          <span className="font-semibold text-[#C5A46D]">${service.price}</span>
-          <span className="text-[#F7F5F0]">{service.duration} min</span>
+          <span className="font-semibold text-charcoal dark:text-gold">${service.price}</span>
+          <span className="text-muted-foreground">{service.duration} min</span>
         </div>
       </CardContent>
       <CardFooter className="mt-auto">
         <Button
-          className="w-full bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]"
+          className="w-full bg-gold text-midnight hover:bg-gold-hover"
           onClick={() => router.push(`/services/${service._id}`)}
         >
           View Details

@@ -38,7 +38,7 @@ function GoogleButton({ className }: { className?: string }) {
       disabled={pending}
       className={cn(
         buttonVariants({ size: "lg" }),
-        "h-11 w-full gap-2 border border-champagne bg-white text-midnight hover:bg-ivory disabled:opacity-50 disabled:cursor-not-allowed",
+        "h-11 w-full gap-2 border border-champagne bg-card text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
     >

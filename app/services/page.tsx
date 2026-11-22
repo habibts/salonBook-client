@@ -110,18 +110,18 @@ function ServicesPageContent() {
   }
 
   return (
-    <div className="bg-[#F7F5F0] py-12 md:py-16 lg:py-20">
+    <div className="bg-background py-12 md:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h1 className="font-heading text-3xl font-semibold text-[#151515] sm:text-4xl">
+        <h1 className="font-heading text-3xl font-semibold text-foreground sm:text-4xl">
           Explore Our Services
         </h1>
-        <p className="mt-2 max-w-2xl text-[#77736D]">
+        <p className="mt-2 max-w-2xl text-muted-foreground">
           Discover premium grooming services tailored to your style.
         </p>
 
         <div className="mt-6 flex flex-col gap-4 md:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 size-4 text-[#77736D]" />
+            <Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
             <Input
               placeholder="Search services..."
               value={search}
@@ -130,7 +130,7 @@ function ServicesPageContent() {
                 setSearch(value)
                 updateUrl({ search: value })
               }}
-              className="border-[#E9E3D8] bg-white pl-9 text-[#151515]"
+              className="border-border bg-card pl-9 text-foreground"
             />
           </div>
           <Select value={category} onValueChange={(v) => {
@@ -138,10 +138,10 @@ function ServicesPageContent() {
             setCategory(value)
             updateUrl({ category: value === "all" ? "" : value })
           }}>
-            <SelectTrigger className="w-full border-[#E9E3D8] bg-white text-[#151515] md:w-48">
+            <SelectTrigger className="w-full border-border bg-card text-foreground md:w-48">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
-            <SelectContent className="border-[#E9E3D8] bg-white text-[#151515]">
+            <SelectContent className="border-border bg-card text-foreground">
               <SelectItem value="all">All Categories</SelectItem>
               {categories.map((c) => (
                 <SelectItem key={c} value={c}>
@@ -155,28 +155,28 @@ function ServicesPageContent() {
             setSort(value)
             updateUrl({ sort: value === "none" ? "" : value })
           }}>
-            <SelectTrigger className="w-full border-[#E9E3D8] bg-white text-[#151515] md:w-48">
+            <SelectTrigger className="w-full border-border bg-card text-foreground md:w-48">
               <SelectValue placeholder="Sort by price" />
             </SelectTrigger>
-            <SelectContent className="border-[#E9E3D8] bg-white text-[#151515]">
+            <SelectContent className="border-border bg-card text-foreground">
               <SelectItem value="none">Default</SelectItem>
               <SelectItem value="low">Price: Low to High</SelectItem>
               <SelectItem value="high">Price: High to Low</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={clearFilters} className="border-[#E9E3D8]">
+          <Button variant="outline" onClick={clearFilters} className="border-border">
             Clear Filters
           </Button>
         </div>
 
         {!loading && !error && (
-          <p className="mt-4 text-sm text-[#77736D]">{filtered.length} services found</p>
+          <p className="mt-4 text-sm text-muted-foreground">{filtered.length} services found</p>
         )}
 
         {loading ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="flex h-full flex-col overflow-hidden border-[#3A3834] bg-[#292929]">
+              <Card key={i} className="flex h-full flex-col overflow-hidden border-border bg-card">
                 <Skeleton className="aspect-[16/9] w-full" />
                 <CardHeader className="flex-1 p-4">
                   <Skeleton className="h-6 w-3/4 mb-2" />
@@ -197,13 +197,13 @@ function ServicesPageContent() {
           </div>
         ) : error ? (
           <div className="mt-6 text-center">
-            <p className="text-red-500">{error}</p>
+            <p className="text-destructive dark:text-champagne">{error}</p>
             <Button onClick={fetchServices} className="mt-4">
               Retry
             </Button>
           </div>
         ) : filtered.length === 0 ? (
-          <p className="mt-6 text-center text-[#77736D]">No services found. Try adjusting filters.</p>
+          <p className="mt-6 text-center text-muted-foreground">No services found. Try adjusting filters.</p>
         ) : (
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((service) => (

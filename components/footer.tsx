@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { Clock, Mail, MapPin, Phone } from "lucide-react"
 import { fetchWithTimeout } from "@/lib/fetch"
 
-const mutedText = "text-[#A7A39C]"
+const mutedText = "text-ivory/70"
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 

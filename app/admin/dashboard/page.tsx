@@ -248,7 +248,7 @@ export default function AdminDashboardPage() {
           <span className="mt-1.5 flex-1 text-sm leading-relaxed text-muted-foreground">
             Add, edit and publish every salon service.
           </span>
-          <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-gold uppercase">
+          <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-charcoal uppercase dark:text-gold">
             Open
             <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
           </span>
@@ -267,7 +267,7 @@ export default function AdminDashboardPage() {
           <span className="mt-1.5 flex-1 text-sm leading-relaxed text-muted-foreground">
             Review requests and keep bookings moving.
           </span>
-          <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-gold uppercase">
+          <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-charcoal uppercase dark:text-gold">
             Open
             <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
           </span>
@@ -286,7 +286,7 @@ export default function AdminDashboardPage() {
           <span className="mt-1.5 flex-1 text-sm leading-relaxed text-muted-foreground">
             Control customer accounts and access.
           </span>
-          <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-gold uppercase">
+          <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-charcoal uppercase dark:text-gold">
             Open
             <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
           </span>
@@ -305,7 +305,7 @@ export default function AdminDashboardPage() {
           <span className="mt-1.5 flex-1 text-sm leading-relaxed text-muted-foreground">
             See the booking flow exactly as customers do.
           </span>
-          <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-gold uppercase">
+          <span className="mt-4 inline-flex items-center gap-1.5 text-[11px] font-semibold tracking-[0.14em] text-charcoal uppercase dark:text-gold">
             Open
             <ArrowUpRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" aria-hidden="true" />
           </span>

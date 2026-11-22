@@ -63,7 +63,7 @@ class AppointmentNotFoundError extends Error {
 }
 
 const primaryButtonClassName =
-  "h-11 w-full gap-2 rounded-xl bg-[#171717] px-6 text-sm font-semibold text-white hover:bg-[#34312D] sm:w-auto"
+  "h-11 w-full gap-2 rounded-xl bg-midnight px-6 text-sm font-semibold text-white hover:bg-charcoal sm:w-auto"
 
 const secondaryButtonClassName =
   "h-11 w-full gap-2 rounded-xl px-6 text-sm font-semibold sm:w-auto"
@@ -166,13 +166,13 @@ function SuccessMedallion() {
       />
       <span
         aria-hidden="true"
-        className="absolute inset-0 rounded-full bg-[#E9F2EA] ring-1 ring-[#CBDFCD]"
+        className="absolute inset-0 rounded-full bg-sage/15 ring-1 ring-sage/35"
       />
       <span
         aria-hidden="true"
         className="absolute -inset-2 rounded-full border border-gold/30"
       />
-      <span className="relative flex size-18 items-center justify-center rounded-full bg-sage text-white shadow-[0_14px_28px_-14px_rgba(23,23,23,0.55)]">
+      <span className="surface-floating relative flex size-18 items-center justify-center rounded-full bg-sage text-white">
         <svg
           viewBox="0 0 24 24"
           fill="none"
@@ -551,7 +551,7 @@ function PaymentSuccessContent() {
     return (
       <StateCard
         icon={<TriangleAlert className="size-6" />}
-        iconClassName="size-16 border border-[#F2CECC] bg-[#FBEAE8] text-[#B03A34]"
+        iconClassName="size-16 border border-gold/40 bg-champagne/60 text-charcoal dark:text-ivory"
         title="Payment not completed"
         description="Your payment wasn't completed, so your card has not been charged. You can review your booking and try again whenever you're ready."
       >
@@ -581,7 +581,7 @@ function PaymentSuccessContent() {
     return (
       <StateCard
         icon={<TriangleAlert className="size-6" />}
-        iconClassName="size-16 border border-[#F2CECC] bg-[#FBEAE8] text-[#B03A34]"
+        iconClassName="size-16 border border-gold/40 bg-champagne/60 text-charcoal dark:text-ivory"
         title="We couldn't verify your payment"
         description={
           error ??
@@ -615,7 +615,7 @@ function PaymentSuccessContent() {
     return (
       <StateCard
         icon={<Clock className="size-6" />}
-        iconClassName="size-16 border border-[#F0D9A8] bg-[#FFF4DF] text-[#8A5A00]"
+        iconClassName="size-16 border border-gold/35 bg-champagne/50 text-charcoal dark:text-ivory"
         title="We're still confirming your payment"
         description="Your confirmation is taking a little longer than usual. There's nothing else you need to do — check again in a moment and your appointment will show as paid as soon as it's through."
       >

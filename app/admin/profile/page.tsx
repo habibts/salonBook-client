@@ -16,87 +16,87 @@ export default function AdminProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F1EDE5] px-4 py-8">
+    <div className="min-h-screen bg-muted px-4 py-8">
       <div className="mx-auto max-w-7xl">
-        <div className="rounded-2xl bg-[#171717] p-6 text-[#F1EDE5]">
+        <div className="rounded-2xl bg-midnight p-6 text-ivory">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              <Avatar className="size-16 border-2 border-[#B8955A]">
+              <Avatar className="size-16 border-2 border-gold">
                 {user?.image ? <AvatarImage src={user.image} /> : null}
                 <AvatarFallback>{getInitials(user?.name ?? "")}</AvatarFallback>
               </Avatar>
               <div>
                 <h1 className="font-heading text-2xl font-semibold">{user?.name}</h1>
-                <p className="text-sm text-[#E8D8B9]">{user?.email}</p>
+                <p className="text-sm text-champagne">{user?.email}</p>
                 <div className="mt-1 flex gap-2">
-                  <Badge className="bg-[#B8955A] text-[#171717]">Admin</Badge>
-                  <Badge className="bg-[#657C67] text-white">Active</Badge>
+                  <Badge className="bg-gold text-midnight">Admin</Badge>
+                  <Badge className="bg-sage text-white">Active</Badge>
                 </div>
               </div>
             </div>
-            <Button className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Edit Profile</Button>
+            <Button className="bg-gold text-midnight hover:bg-gold-hover">Edit Profile</Button>
           </div>
         </div>
 
         <div className="mt-8 grid gap-6 md:grid-cols-2">
-        <Card className="border-[#DED6C8] bg-white">
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="text-[#171717]">Personal Information</CardTitle>
-            <p className="text-sm text-[#77736D]">Your personal account details</p>
+            <CardTitle className="text-foreground">Personal Information</CardTitle>
+            <p className="text-sm text-muted-foreground">Your personal account details</p>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             <div className="flex items-center gap-3">
-              <User className="size-5 text-[#B8955A]" />
+              <User className="size-5 text-gold" />
               <div>
-                <p className="text-xs text-[#77736D]">Full Name</p>
-                <p className="text-[#34312D]">{user?.name ?? "—"}</p>
+                <p className="text-xs text-muted-foreground">Full Name</p>
+                <p className="text-foreground">{user?.name ?? "—"}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Mail className="size-5 text-[#B8955A]" />
+              <Mail className="size-5 text-gold" />
               <div>
-                <p className="text-xs text-[#77736D]">Email Address</p>
-                <p className="text-[#34312D]">{user?.email ?? "—"}</p>
+                <p className="text-xs text-muted-foreground">Email Address</p>
+                <p className="text-foreground">{user?.email ?? "—"}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <IdCard className="size-5 text-[#B8955A]" />
+              <IdCard className="size-5 text-gold" />
               <div>
-                <p className="text-xs text-[#77736D]">User ID</p>
-                <p className="break-all text-[#34312D]">{user?.id ?? "—"}</p>
+                <p className="text-xs text-muted-foreground">User ID</p>
+                <p className="break-all text-foreground">{user?.id ?? "—"}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Calendar className="size-5 text-[#B8955A]" />
+              <Calendar className="size-5 text-gold" />
               <div>
-                <p className="text-xs text-[#77736D]">Account Created</p>
-                <p className="text-[#34312D]">—</p>
+                <p className="text-xs text-muted-foreground">Account Created</p>
+                <p className="text-foreground">—</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-[#DED6C8] bg-white">
+        <Card className="border-border bg-card">
           <CardHeader>
-            <CardTitle className="text-[#171717]">Account Overview</CardTitle>
-            <p className="text-sm text-[#77736D]">A quick overview of your account</p>
+            <CardTitle className="text-foreground">Account Overview</CardTitle>
+            <p className="text-sm text-muted-foreground">A quick overview of your account</p>
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
-              <p className="text-xs text-[#77736D]">Account Role</p>
-              <p className="font-semibold text-[#171717]">Admin</p>
+            <div className="rounded-xl border border-border bg-muted p-4">
+              <p className="text-xs text-muted-foreground">Account Role</p>
+              <p className="font-semibold text-foreground">Admin</p>
             </div>
-            <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
-              <p className="text-xs text-[#77736D]">Account Status</p>
-              <p className="font-semibold text-[#657C67]">Active</p>
+            <div className="rounded-xl border border-border bg-muted p-4">
+              <p className="text-xs text-muted-foreground">Account Status</p>
+              <p className="font-semibold text-sage">Active</p>
             </div>
-            <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
-              <p className="text-xs text-[#77736D]">Member Since</p>
-              <p className="font-semibold text-[#34312D]">—</p>
+            <div className="rounded-xl border border-border bg-muted p-4">
+              <p className="text-xs text-muted-foreground">Member Since</p>
+              <p className="font-semibold text-foreground">—</p>
             </div>
-            <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
-              <p className="text-xs text-[#77736D]">Auth Provider</p>
-              <p className="font-semibold text-[#34312D]">Email</p>
+            <div className="rounded-xl border border-border bg-muted p-4">
+              <p className="text-xs text-muted-foreground">Auth Provider</p>
+              <p className="font-semibold text-foreground">Email</p>
             </div>
           </CardContent>
         </Card>

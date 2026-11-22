@@ -98,7 +98,7 @@ export function DashboardSkeleton() {
           {/* Table skeleton */}
           <div className="overflow-x-auto rounded-xl border border-dark-border bg-card animate-pulse">
             <table className="w-full text-sm">
-              <thead className="bg-[#F1EDE5]">
+              <thead className="bg-muted">
                 <tr>
                   <th className="p-3 text-left"><div className="h-4 w-24 bg-dark-border/30 rounded" /></th>
                   <th className="p-3 text-left"><div className="h-4 w-20 bg-dark-border/30 rounded" /></th>

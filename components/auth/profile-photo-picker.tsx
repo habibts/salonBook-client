@@ -67,7 +67,7 @@ function ProfilePhotoPicker({ onChange, disabled = false }: ProfilePhotoPickerPr
         onClick={() => inputRef.current?.click()}
         disabled={busy}
         aria-label={preview ? "Change profile photo" : "Add profile photo"}
-        className="group relative size-20 overflow-hidden rounded-full border-2 border-dashed border-champagne bg-ivory/60 text-muted-gray transition-colors hover:border-gold hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 disabled:opacity-50"
+        className="group relative size-20 overflow-hidden rounded-full border-2 border-dashed border-champagne bg-muted text-muted-foreground transition-colors hover:border-gold hover:text-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50 focus-visible:ring-offset-2 focus-visible:ring-offset-card disabled:opacity-50"
       >
         {preview ? (
           <>
@@ -98,15 +98,15 @@ function ProfilePhotoPicker({ onChange, disabled = false }: ProfilePhotoPickerPr
         aria-label="Upload profile photo"
       />
 
-      <p className="text-xs text-muted-gray">
+      <p className="text-xs text-muted-foreground">
         {processing
           ? "Processing photo…"
           : preview
             ? "Click to change photo"
             : "Add a profile photo"}{" "}
-        <span className="text-muted-gray/70">(optional)</span>
+        <span className="text-muted-foreground/70">(optional)</span>
       </p>
-      <p className="text-[11px] text-muted-gray/70">JPG, JPEG, PNG or WEBP • Max 5 MB</p>
+      <p className="text-[11px] text-muted-foreground/70">JPG, JPEG, PNG or WEBP • Max 5 MB</p>
 
       {preview && !processing && (
         <button

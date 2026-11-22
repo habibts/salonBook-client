@@ -9,14 +9,14 @@ const features = [
 
 export function WhyChooseSalonBook() {
   return (
-    <section id="why-choose-salonbook" className="bg-[#151515] py-12 md:py-16 lg:py-20">
+    <section id="why-choose-salonbook" className="bg-warm-cream py-12 md:py-16 lg:py-20 dark:bg-midnight">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
-          <p className="text-xs uppercase tracking-widest text-[#C5A46D]">WHY CHOOSE SALONBOOK</p>
-          <h2 className="mt-2 font-heading text-3xl font-semibold text-[#F7F5F0] sm:text-4xl">
-            More Than a Haircut. <span className="text-[#C5A46D]">It&apos;s an Experience.</span>
+          <p className="text-xs uppercase tracking-widest text-primary-rose dark:text-gold">WHY CHOOSE SALONBOOK</p>
+          <h2 className="mt-2 font-heading text-3xl font-semibold text-dark-text dark:text-white sm:text-4xl">
+            More Than a Haircut. <span className="text-primary-rose dark:text-gold">It&apos;s an Experience.</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-[#C7C2B9]">
+          <p className="mx-auto mt-4 max-w-2xl text-muted-text dark:text-champagne">
             Discover a better grooming experience with expert professionals, premium services, and effortless online booking.
           </p>
         </div>
@@ -24,11 +24,13 @@ export function WhyChooseSalonBook() {
           {features.map((f) => (
             <div
               key={f.title}
-              className="flex h-full flex-col rounded-xl border border-[#3A3834] bg-[#292929] p-6 transition-colors hover:border-[#C5A46D]"
+              className="group flex h-full flex-col rounded-xl border border-soft-border bg-white p-6 transition-all duration-500 hover:border-primary-rose/50 hover:shadow-xl hover:-translate-y-1 surface-raised dark:border-dark-border dark:bg-charcoal"
             >
-              <f.icon className="size-8 text-[#C5A46D]" />
-              <h3 className="mt-4 font-heading text-lg text-[#F7F5F0]">{f.title}</h3>
-              <p className="mt-2 text-sm text-[#C7C2B9]">{f.desc}</p>
+              <div className="inline-flex size-12 items-center justify-center rounded-xl bg-primary-rose/10 text-primary-rose group-hover:bg-primary-rose group-hover:text-white transition-all duration-500 dark:bg-gold/10 dark:text-gold dark:group-hover:bg-gold dark:group-hover:text-midnight">
+                <f.icon className="size-6" aria-hidden="true" />
+              </div>
+              <h3 className="mt-4 font-heading text-lg text-dark-text dark:text-white">{f.title}</h3>
+              <p className="mt-2 text-sm text-muted-text dark:text-champagne">{f.desc}</p>
             </div>
           ))}
         </div>

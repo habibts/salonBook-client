@@ -18,7 +18,7 @@ export default function NotFound() {
 
   return (
     <main
-      className="flex min-h-screen flex-col items-center justify-center bg-ivory text-midnight px-4 sm:px-6 lg:px-8 pt-20 pb-12"
+      className="flex min-h-screen flex-col items-center justify-center bg-background px-4 pt-20 pb-12 text-foreground sm:px-6 lg:px-8"
       role="main"
       aria-label="Page not found"
     >
@@ -39,7 +39,7 @@ export default function NotFound() {
           <div className="relative inline-block">
             <h1
               className={cn(
-                "font-heading text-[12rem] font-semibold tracking-tighter text-midnight/5 leading-none select-none",
+                "font-heading text-[12rem] leading-none font-semibold tracking-tighter text-foreground/5 select-none",
                 "lg:text-[14rem]"
               )}
               aria-hidden="true"
@@ -49,11 +49,11 @@ export default function NotFound() {
             <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-1 h-[240px] bg-champagne/40 rounded-full opacity-50 lg:-top-20 lg:w-[300px]" />
           </div>
 
-          <h2 className="font-heading text-3xl font-semibold text-midnight tracking-tight lg:text-4xl">
+          <h2 className="font-heading text-3xl font-semibold tracking-tight text-foreground lg:text-4xl">
             Oops! This page has gone missing.
           </h2>
 
-          <p className="text-lg text-muted-gray leading-relaxed max-w-lg mx-auto lg:mx-0 lg:text-left">
+          <p className="mx-auto max-w-lg text-lg leading-relaxed text-muted-foreground lg:mx-0 lg:text-left">
             The page you&rsquo;re looking for may have moved, been removed, or is no longer available.
             Let&rsquo;s help you find your perfect beauty experience.
           </p>
@@ -102,7 +102,7 @@ export default function NotFound() {
                 viewBox="0 0 200 260"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
-                className="text-gold/20 drop-shadow-[0_8px_24px_rgba(184,149,90,0.15)] animate-[float_6s_ease-in-out-infinite]"
+                className="animate-[float_6s_ease-in-out-infinite] text-gold/20"
               >
                 <defs>
                   <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
@@ -168,7 +168,7 @@ export default function NotFound() {
       </div>
 
       <div className="mt-auto w-full max-w-5xl px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-sm text-muted-gray">
+        <p className="text-center text-sm text-muted-foreground">
           SalonBook &mdash; Premium grooming experiences
         </p>
       </div>

@@ -31,12 +31,12 @@ function ToastViewport({ className, ...props }: ToastPrimitive.Viewport.Props) {
 }
 
 const typeStyles = {
-  success: "bg-white border-sage/30 shadow-[0_4px_24px_-4px_rgba(101,124,103,0.35)]",
-  error: "bg-white border-destructive/30 shadow-[0_4px_24px_-4px_rgba(220,38,38,0.3)]",
-  warning: "bg-white border-champagne/40 shadow-[0_4px_24px_-4px_rgba(232,216,185,0.4)]",
-  info: "bg-white border-gold/30 shadow-[0_4px_24px_-4px_rgba(184,149,90,0.3)]",
-  loading: "bg-white border-gold/30 shadow-[0_4px_24px_-4px_rgba(184,149,90,0.3)]",
-  default: "bg-white border-hairline shadow-lg",
+  success: "border-sage/30 bg-card surface-floating",
+  error: "border-destructive/30 bg-card surface-floating",
+  warning: "border-champagne/40 bg-card surface-floating",
+  info: "border-gold/30 bg-card surface-floating",
+  loading: "border-gold/30 bg-card surface-floating",
+  default: "border-hairline bg-card surface-floating",
 }
 
 const typeIconStyles = {
@@ -84,7 +84,7 @@ function ToastTitle({ className, ...props }: ToastPrimitive.Title.Props) {
   return (
     <ToastPrimitive.Title
       data-slot="toast-title"
-      className={cn("text-sm font-medium text-midnight leading-snug", className)}
+      className={cn("text-sm leading-snug font-medium text-foreground", className)}
       {...props}
     />
   )
@@ -94,7 +94,7 @@ function ToastDescription({ className, ...props }: ToastPrimitive.Description.Pr
   return (
     <ToastPrimitive.Description
       data-slot="toast-description"
-      className={cn("text-sm text-muted-gray leading-relaxed mt-0.5", className)}
+      className={cn("mt-0.5 text-sm leading-relaxed text-muted-foreground", className)}
       {...props}
     />
   )
@@ -127,7 +127,7 @@ function ToastClose({
       aria-label="Close toast"
       render={render}
       className={cn(
-        "shrink-0 text-muted-gray hover:text-midnight transition-colors",
+        "shrink-0 text-muted-foreground transition-colors hover:text-foreground",
         className
       )}
       {...props}

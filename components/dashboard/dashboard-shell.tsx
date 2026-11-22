@@ -130,7 +130,7 @@ function SidebarContent({
             <span className="truncate font-heading text-lg leading-none font-semibold tracking-wide text-gold">
               SalonBook
             </span>
-            <span className="mt-1.5 text-[9px] font-semibold tracking-[0.28em] text-[#8A857D] uppercase">
+            <span className="mt-1.5 text-[9px] font-semibold tracking-[0.28em] text-champagne/70 uppercase">
               Dashboard
             </span>
           </span>
@@ -140,7 +140,7 @@ function SidebarContent({
             type="button"
             onClick={onClose}
             aria-label="Close navigation menu"
-            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[#A9A49C] transition-colors hover:bg-white/5 hover:text-gold"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-ivory/70 transition-colors hover:bg-ivory/10 hover:text-gold"
           >
             <X className="size-5" />
           </button>
@@ -154,7 +154,7 @@ function SidebarContent({
       >
         <p
           className={cn(
-            "px-3 pt-2 pb-1.5 text-[10px] font-semibold tracking-[0.22em] text-[#8A857D] uppercase",
+            "px-3 pt-2 pb-1.5 text-[10px] font-semibold tracking-[0.22em] text-champagne/70 uppercase",
             labelClass
           )}
         >
@@ -174,8 +174,8 @@ function SidebarContent({
                 "relative flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-gold/60",
                 linkJustify,
                 isActive
-                  ? "bg-gold/15 text-gold shadow-[inset_0_0_0_1px_rgba(184,149,90,0.28)]"
-                  : "text-[#A9A49C] hover:bg-white/[0.04] hover:text-ivory"
+                  ? "bg-gold/15 text-gold ring-1 ring-inset ring-gold/30"
+                  : "text-ivory/70 hover:bg-ivory/[0.06] hover:text-ivory"
               )}
             >
               {isActive && (
@@ -187,7 +187,7 @@ function SidebarContent({
               <item.icon
                 className={cn(
                   "size-5 shrink-0 transition-colors duration-200",
-                  isActive ? "text-gold" : "text-[#8A857D]"
+                  isActive ? "text-gold" : "text-champagne/70"
                 )}
                 aria-hidden="true"
               />
@@ -203,7 +203,7 @@ function SidebarContent({
           href="/"
           onClick={onClose}
           className={cn(
-            "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium text-[#A9A49C] transition-colors duration-200 outline-none hover:bg-white/[0.04] hover:text-ivory focus-visible:ring-2 focus-visible:ring-gold/60",
+            "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium text-ivory/70 transition-colors duration-200 outline-none hover:bg-ivory/[0.06] hover:text-ivory focus-visible:ring-2 focus-visible:ring-gold/60",
             linkJustify
           )}
         >
@@ -215,7 +215,7 @@ function SidebarContent({
           onClick={onLogout}
           disabled={loggingOut}
           className={cn(
-            "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium text-[#A9A49C] transition-colors duration-200 outline-none hover:bg-gold/10 hover:text-gold focus-visible:ring-2 focus-visible:ring-gold/60 disabled:opacity-60",
+            "flex h-11 shrink-0 items-center gap-3 rounded-lg px-3 text-sm font-medium text-ivory/70 transition-colors duration-200 outline-none hover:bg-gold/10 hover:text-gold focus-visible:ring-2 focus-visible:ring-gold/60 disabled:opacity-60",
             linkJustify
           )}
         >
@@ -386,7 +386,7 @@ function DashboardShell({ role, children }: DashboardShellProps) {
               onClick={() => setDrawerOpen(false)}
               className="animate-fade absolute inset-0 bg-midnight/70 backdrop-blur-[2px]"
             />
-            <div className="animate-drawer absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-sidebar shadow-[8px_0_48px_-16px_rgba(0,0,0,0.7)]">
+            <div className="animate-drawer surface-floating absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-sidebar">
               <SidebarContent
                 role={role}
                 onClose={() => setDrawerOpen(false)}

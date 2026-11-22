@@ -126,79 +126,79 @@ export default function AdminTransactionsPage() {
   return (
     <div className="mx-auto w-full max-w-7xl space-y-6 px-6 py-8">
       <div>
-        <h1 className="font-heading text-2xl font-semibold text-[#171717]">Transactions</h1>
-        <p className="text-sm text-[#77736D]">Monitor and manage payment transactions across the platform.</p>
+        <h1 className="font-heading text-2xl font-semibold text-foreground">Transactions</h1>
+        <p className="text-sm text-muted-foreground">Monitor and manage payment transactions across the platform.</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-[#DED6C8] bg-white shadow-sm">
+        <Card className="border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-[#77736D]">Total Transactions</CardTitle>
-              <Receipt className="size-5 text-[#B8955A]" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Transactions</CardTitle>
+              <Receipt className="size-5 text-gold" />
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-[#171717]">{isLoading ? <Skeleton className="h-8 w-24" /> : total}</p>
-            <p className="text-xs text-[#77736D]">All recorded transactions</p>
+            <p className="text-2xl font-semibold text-foreground">{isLoading ? <Skeleton className="h-8 w-24" /> : total}</p>
+            <p className="text-xs text-muted-foreground">All recorded transactions</p>
           </CardContent>
         </Card>
-        <Card className="border-[#DED6C8] bg-white shadow-sm">
+        <Card className="border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-[#77736D]">Successful Payments</CardTitle>
-              <CheckCircle className="size-5 text-[#657C67]" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Successful Payments</CardTitle>
+              <CheckCircle className="size-5 text-sage" />
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-[#171717]">{isLoading ? <Skeleton className="h-8 w-24" /> : success}</p>
-            <p className="text-xs text-[#77736D]">Successfully completed payments</p>
+            <p className="text-2xl font-semibold text-foreground">{isLoading ? <Skeleton className="h-8 w-24" /> : success}</p>
+            <p className="text-xs text-muted-foreground">Successfully completed payments</p>
           </CardContent>
         </Card>
-        <Card className="border-[#DED6C8] bg-white shadow-sm">
+        <Card className="border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-[#77736D]">Pending Payments</CardTitle>
-              <Clock className="size-5 text-[#B8955A]" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Payments</CardTitle>
+              <Clock className="size-5 text-gold" />
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-[#171717]">{isLoading ? <Skeleton className="h-8 w-24" /> : pending}</p>
-            <p className="text-xs text-[#77736D]">Awaiting payment completion</p>
+            <p className="text-2xl font-semibold text-foreground">{isLoading ? <Skeleton className="h-8 w-24" /> : pending}</p>
+            <p className="text-xs text-muted-foreground">Awaiting payment completion</p>
           </CardContent>
         </Card>
-        <Card className="border-[#DED6C8] bg-white shadow-sm">
+        <Card className="border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-medium text-[#77736D]">Total Revenue</CardTitle>
-              <DollarSign className="size-5 text-[#B8955A]" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Revenue</CardTitle>
+              <DollarSign className="size-5 text-gold" />
             </div>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-semibold text-[#171717]">{isLoading ? <Skeleton className="h-8 w-32" /> : `$${revenue.toFixed(2)}`}</p>
-            <p className="text-xs text-[#77736D]">From successful payments</p>
+            <p className="text-2xl font-semibold text-foreground">{isLoading ? <Skeleton className="h-8 w-32" /> : `$${revenue.toFixed(2)}`}</p>
+            <p className="text-xs text-muted-foreground">From successful payments</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#77736D]" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Search transactions..." value={query} onChange={(e) => setQuery(e.target.value)} className="pl-9 max-w-sm" />
         </div>
-        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 rounded-md border border-[#DED6C8] bg-white px-3 text-sm">
+        <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="h-9 rounded-md border border-border bg-card px-3 text-sm">
           <option value="all">All Statuses</option>
           <option value="Paid">Paid</option>
           <option value="Pending">Pending</option>
           <option value="Failed">Failed</option>
         </select>
-        <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="h-9 rounded-md border border-[#DED6C8] bg-white px-3 text-sm">
+        <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} className="h-9 rounded-md border border-border bg-card px-3 text-sm">
           <option value="all">All Dates</option>
           <option value="today">Today</option>
           <option value="7d">Last 7 Days</option>
           <option value="30d">Last 30 Days</option>
         </select>
-        <select value={sort} onChange={(e) => setSort(e.target.value)} className="h-9 rounded-md border border-[#DED6C8] bg-white px-3 text-sm">
+        <select value={sort} onChange={(e) => setSort(e.target.value)} className="h-9 rounded-md border border-border bg-card px-3 text-sm">
           <option value="newest">Newest First</option>
           <option value="oldest">Oldest First</option>
           <option value="highest">Highest Amount</option>
@@ -221,16 +221,16 @@ export default function AdminTransactionsPage() {
       </div>
 
       {error ? (
-        <div className="rounded-xl border border-[#DED6C8] bg-white px-6 py-10 text-center">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="rounded-xl border border-border bg-card px-6 py-10 text-center">
+          <p className="text-sm text-destructive dark:text-champagne">{error}</p>
           <Button onClick={loadTransactions} className="mt-4">
             Retry
           </Button>
         </div>
       ) : isLoading ? (
-        <div className="overflow-x-auto rounded-xl border border-[#DED6C8] bg-white">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-[#F1EDE5]">
+            <thead className="bg-muted">
               <tr>
                 <th className="p-3 text-left">Transaction ID</th>
                 <th className="p-3 text-left">Appointment</th>
@@ -242,7 +242,7 @@ export default function AdminTransactionsPage() {
             </thead>
             <tbody>
               {Array.from({ length: 5 }).map((_, i) => (
-                <tr key={i} className="border-t border-[#DED6C8]">
+                <tr key={i} className="border-t border-border">
                   <td className="p-3"><Skeleton className="h-4 w-48" /></td>
                   <td className="p-3"><Skeleton className="h-4 w-32" /></td>
                   <td className="p-3"><Skeleton className="h-4 w-24" /></td>
@@ -255,15 +255,15 @@ export default function AdminTransactionsPage() {
           </table>
         </div>
       ) : (filtered.length === 0 ? (
-        <div className="rounded-xl border border-[#DED6C8] bg-white p-12 text-center">
-          <Receipt className="mx-auto size-10 text-[#B8955A]" />
-          <h3 className="mt-4 font-heading text-lg text-[#171717]">No transactions yet</h3>
-          <p className="mt-2 text-sm text-[#77736D]">Payment transactions will appear here once customers complete their payments.</p>
+        <div className="rounded-xl border border-border bg-card p-12 text-center">
+          <Receipt className="mx-auto size-10 text-gold" />
+          <h3 className="mt-4 font-heading text-lg text-foreground">No transactions yet</h3>
+          <p className="mt-2 text-sm text-muted-foreground">Payment transactions will appear here once customers complete their payments.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-[#DED6C8] bg-white">
+        <div className="overflow-x-auto rounded-xl border border-border bg-card">
           <table className="w-full text-sm">
-            <thead className="bg-[#F1EDE5]">
+            <thead className="bg-muted">
               <tr>
                 <th className="p-3 text-left">Transaction ID</th>
                 <th className="p-3 text-left">Appointment</th>
@@ -275,11 +275,11 @@ export default function AdminTransactionsPage() {
             </thead>
             <tbody>
               {filtered.map((t) => (
-                <tr key={t._id} className="border-t border-[#DED6C8]">
+                <tr key={t._id} className="border-t border-border">
                   <td className="p-3 break-all">{t.paymentIntentId || t._id}</td>
                   <td className="p-3">{t.appointmentId}</td>
                   <td className="p-3">${((t.amount || 0) / 100).toFixed(2)}</td>
-                  <td className="p-3"><Badge className={t.status === "Paid" ? "bg-[#657C67] text-white" : "bg-[#B8955A] text-[#171717]"}>{t.status}</Badge></td>
+                  <td className="p-3"><Badge className={t.status === "Paid" ? "bg-sage text-white" : "bg-gold text-midnight"}>{t.status}</Badge></td>
                   <td className="p-3">{new Date(t.createdAt ?? "").toLocaleString()}</td>
                   <td className="p-3"><Button size="sm" variant="outline" onClick={() => setSelected(t._id)}>View Details</Button></td>
                 </tr>

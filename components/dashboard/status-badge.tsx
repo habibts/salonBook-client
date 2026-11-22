@@ -3,16 +3,16 @@ import { cn } from "@/lib/utils"
 
 /** Consistent status colours across every dashboard surface. */
 const STATUS_STYLES: Record<string, string> = {
-  Pending: "border-[#F0D9A8] bg-[#FFF4DF] text-[#8A5A00]",
-  Confirmed: "border-[#CFDDFB] bg-[#E9F0FE] text-[#2F5FA8]",
-  Completed: "border-[#CBDFCD] bg-[#E9F2EA] text-[#3C6B41]",
-  Cancelled: "border-[#F2CECC] bg-[#FBEAE8] text-[#B03A34]",
-  Active: "border-[#CBDFCD] bg-[#E9F2EA] text-[#3C6B41]",
-  Inactive: "border-[#DED6C8] bg-[#F1EDE5] text-[#77736D]",
-  Blocked: "border-[#F2CECC] bg-[#FBEAE8] text-[#B03A34]",
-  Paid: "border-[#CBDFCD] bg-[#E9F2EA] text-[#3C6B41]",
-  Unpaid: "border-[#F0D9A8] bg-[#FFF4DF] text-[#8A5A00]",
-  Refunded: "border-[#DED6C8] bg-[#F1EDE5] text-[#77736D]",
+  Pending: "border-gold/35 bg-champagne/50 text-charcoal dark:text-ivory",
+  Confirmed: "border-gold/35 bg-gold/10 text-charcoal dark:text-champagne",
+  Completed: "border-sage/35 bg-sage/15 text-sage",
+  Cancelled: "border-gold/40 bg-champagne/60 text-charcoal dark:text-ivory",
+  Active: "border-sage/35 bg-sage/15 text-sage",
+  Inactive: "border-border bg-muted text-muted-foreground",
+  Blocked: "border-gold/40 bg-champagne/60 text-charcoal dark:text-ivory",
+  Paid: "border-sage/35 bg-sage/15 text-sage",
+  Unpaid: "border-gold/35 bg-champagne/50 text-charcoal dark:text-ivory",
+  Refunded: "border-border bg-muted text-muted-foreground",
 }
 
 interface StatusBadgeProps {
@@ -24,7 +24,7 @@ interface StatusBadgeProps {
 function StatusBadge({ status, className }: StatusBadgeProps) {
   const style =
     STATUS_STYLES[status] ??
-    "border-[#DED6C8] bg-[#F1EDE5] text-[#77736D]"
+    "border-border bg-muted text-muted-foreground"
 
   return (
     <Badge

@@ -59,7 +59,7 @@ function SignInForm() {
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <Field>
-        <FieldLabel htmlFor="email" className="text-midnight">
+        <FieldLabel htmlFor="email" className="text-foreground">
           Email Address
         </FieldLabel>
         <Input
@@ -74,12 +74,12 @@ function SignInForm() {
 
       <Field>
         <div className="flex items-center justify-between">
-          <FieldLabel htmlFor="password" className="text-midnight">
+          <FieldLabel htmlFor="password" className="text-foreground">
             Password
           </FieldLabel>
           <a
             href="#"
-            className="text-sm font-medium text-gold-hover underline-offset-2 transition-colors hover:text-midnight hover:underline"
+            className="text-sm font-medium text-charcoal underline-offset-2 transition-colors hover:text-gold hover:underline dark:text-gold dark:hover:text-champagne"
           >
             Forgot Password?
           </a>
@@ -100,7 +100,7 @@ function SignInForm() {
           checked={rememberMe}
           onCheckedChange={(checked) => setRememberMe(checked)}
         />
-        <FieldLabel htmlFor="remember" className="text-midnight">
+        <FieldLabel htmlFor="remember" className="text-foreground">
           Remember Me
         </FieldLabel>
       </Field>

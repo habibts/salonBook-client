@@ -79,10 +79,10 @@ export default function AdminProfilePage() {
   if (!user) {
     return (
       <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
-        <div className="rounded-2xl bg-[#171717] p-6 text-[#F1EDE5]">
+        <div className="rounded-2xl bg-midnight p-6 text-ivory">
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
-              <Skeleton className="size-16 rounded-full border-2 border-[#B8955A]" />
+              <Skeleton className="size-16 rounded-full border-2 border-gold" />
               <div>
                 <Skeleton className="h-8 w-48" />
                 <Skeleton className="mt-1 h-4 w-64" />
@@ -97,7 +97,7 @@ export default function AdminProfilePage() {
           </div>
         </div>
 
-        <Card className="border-[#DED6C8] bg-white">
+        <Card className="border-border bg-card">
           <CardHeader>
             <Skeleton className="h-6 w-48" />
             <Skeleton className="mt-2 h-4 w-64" />
@@ -115,14 +115,14 @@ export default function AdminProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#DED6C8] bg-white">
+        <Card className="border-border bg-card">
           <CardHeader>
             <Skeleton className="h-6 w-48" />
             <Skeleton className="mt-2 h-4 w-64" />
           </CardHeader>
           <CardContent className="grid gap-4 sm:grid-cols-2">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
+              <div key={i} className="rounded-xl border border-border bg-muted p-4">
                 <Skeleton className="h-3 w-32" />
                 <Skeleton className="mt-1 h-5 w-40" />
               </div>
@@ -130,7 +130,7 @@ export default function AdminProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#DED6C8] bg-white">
+        <Card className="border-border bg-card">
           <CardHeader>
             <Skeleton className="h-6 w-48" />
             <Skeleton className="mt-2 h-4 w-64" />
@@ -147,35 +147,35 @@ export default function AdminProfilePage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
-      <div className="rounded-2xl bg-[#171717] p-6 text-[#F1EDE5]">
+      <div className="rounded-2xl bg-midnight p-6 text-ivory">
         <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
-            <Avatar className="size-16 border-2 border-[#B8955A]">
+            <Avatar className="size-16 border-2 border-gold">
               {user?.image ? <AvatarImage src={user.image} /> : null}
               <AvatarFallback>{getInitials(user?.name ?? "")}</AvatarFallback>
             </Avatar>
             <div>
               <h1 className="font-heading text-2xl font-semibold">{user?.name}</h1>
-              <p className="text-sm text-[#E8D8B9]">{user?.email}</p>
+              <p className="text-sm text-champagne">{user?.email}</p>
               <div className="mt-1 flex gap-2">
-                <Badge className="bg-[#B8955A] text-[#171717]">Admin</Badge>
-                <Badge className="bg-[#657C67] text-white">Active</Badge>
+                <Badge className="bg-gold text-midnight">Admin</Badge>
+                <Badge className="bg-sage text-white">Active</Badge>
               </div>
             </div>
           </div>
           <div className="flex gap-2">
             <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleFile} />
-            <Button onClick={() => fileRef.current?.click()} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Change Photo</Button>
-            <Button onClick={() => setOpen(true)} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">Edit Profile</Button>
+            <Button onClick={() => fileRef.current?.click()} className="bg-gold text-midnight hover:bg-gold-hover">Change Photo</Button>
+            <Button onClick={() => setOpen(true)} className="bg-gold text-midnight hover:bg-gold-hover">Edit Profile</Button>
           </div>
         </div>
       </div>
 
       {preview && (
-        <div className="flex items-center gap-4 rounded-xl border border-[#DED6C8] bg-white p-4">
+        <div className="flex items-center gap-4 rounded-xl border border-border bg-card p-4">
           <img src={preview} alt="preview" className="size-16 rounded-full object-cover" />
           <div className="flex gap-2">
-            <Button onClick={saveImage} disabled={uploading} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
+            <Button onClick={saveImage} disabled={uploading} className="bg-gold text-midnight hover:bg-gold-hover">
               {uploading ? "Uploading..." : "Save Photo"}
             </Button>
             <Button variant="outline" onClick={() => setPreview(null)}>Cancel</Button>
@@ -194,7 +194,7 @@ export default function AdminProfilePage() {
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="flex gap-2">
-              <Button onClick={save} disabled={saving} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
+              <Button onClick={save} disabled={saving} className="bg-gold text-midnight hover:bg-gold-hover">
                 {saving ? "Saving..." : "Save Changes"}
               </Button>
               <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
@@ -203,77 +203,77 @@ export default function AdminProfilePage() {
         </DialogContent>
       </Dialog>
 
-      <Card className="border-[#DED6C8] bg-white">
+      <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-[#171717]">Personal Information</CardTitle>
-          <p className="text-sm text-[#77736D]">Your personal account details</p>
+          <CardTitle className="text-foreground">Personal Information</CardTitle>
+          <p className="text-sm text-muted-foreground">Your personal account details</p>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
           <div className="flex items-center gap-3">
-            <User className="size-5 text-[#B8955A]" />
+            <User className="size-5 text-gold" />
             <div>
-              <p className="text-xs text-[#77736D]">Full Name</p>
-              <p className="text-[#34312D]">{user?.name ?? "—"}</p>
+              <p className="text-xs text-muted-foreground">Full Name</p>
+              <p className="text-foreground">{user?.name ?? "—"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Mail className="size-5 text-[#B8955A]" />
+            <Mail className="size-5 text-gold" />
             <div>
-              <p className="text-xs text-[#77736D]">Email Address</p>
-              <p className="break-all text-[#34312D]">{user?.email ?? "—"}</p>
+              <p className="text-xs text-muted-foreground">Email Address</p>
+              <p className="break-all text-foreground">{user?.email ?? "—"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <IdCard className="size-5 text-[#B8955A]" />
+            <IdCard className="size-5 text-gold" />
             <div>
-              <p className="text-xs text-[#77736D]">User ID</p>
-              <p className="break-all text-[#34312D]">{user?.id ?? "—"}</p>
+              <p className="text-xs text-muted-foreground">User ID</p>
+              <p className="break-all text-foreground">{user?.id ?? "—"}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Calendar className="size-5 text-[#B8955A]" />
+            <Calendar className="size-5 text-gold" />
             <div>
-              <p className="text-xs text-[#77736D]">Account Created</p>
-              <p className="text-[#34312D]">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</p>
+              <p className="text-xs text-muted-foreground">Account Created</p>
+              <p className="text-foreground">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-[#DED6C8] bg-white">
+      <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-[#171717]">Account Overview</CardTitle>
-          <p className="text-sm text-[#77736D]">A quick overview of your account</p>
+          <CardTitle className="text-foreground">Account Overview</CardTitle>
+          <p className="text-sm text-muted-foreground">A quick overview of your account</p>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
-            <p className="text-xs text-[#77736D]">Account Role</p>
-            <p className="font-semibold text-[#171717]">Admin</p>
+          <div className="rounded-xl border border-border bg-muted p-4">
+            <p className="text-xs text-muted-foreground">Account Role</p>
+            <p className="font-semibold text-foreground">Admin</p>
           </div>
-          <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
-            <p className="text-xs text-[#77736D]">Account Status</p>
-            <p className="font-semibold text-[#657C67]">Active</p>
+          <div className="rounded-xl border border-border bg-muted p-4">
+            <p className="text-xs text-muted-foreground">Account Status</p>
+            <p className="font-semibold text-sage">Active</p>
           </div>
-          <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
-            <p className="text-xs text-[#77736D]">Member Since</p>
-            <p className="font-semibold text-[#34312D]">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</p>
+          <div className="rounded-xl border border-border bg-muted p-4">
+            <p className="text-xs text-muted-foreground">Member Since</p>
+            <p className="font-semibold text-foreground">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</p>
           </div>
-          <div className="rounded-xl border border-[#DED6C8] bg-[#F1EDE5] p-4">
-            <p className="text-xs text-[#77736D]">Auth Provider</p>
-            <p className="font-semibold text-[#34312D]">Email</p>
+          <div className="rounded-xl border border-border bg-muted p-4">
+            <p className="text-xs text-muted-foreground">Auth Provider</p>
+            <p className="font-semibold text-foreground">Email</p>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="border-[#DED6C8] bg-white">
+      <Card className="border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-[#171717]">Account Security</CardTitle>
-          <p className="text-sm text-[#77736D]">Manage your account security and authentication</p>
+          <CardTitle className="text-foreground">Account Security</CardTitle>
+          <p className="text-sm text-muted-foreground">Manage your account security and authentication</p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-[#34312D]">Authentication Provider: Email/Password</p>
-          <p className="text-sm text-[#77736D]">Password change requires backend support not currently available.</p>
-          <Button onClick={() => authClient.signOut()} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
+          <p className="text-foreground">Authentication Provider: Email/Password</p>
+          <p className="text-sm text-muted-foreground">Password change requires backend support not currently available.</p>
+          <Button onClick={() => authClient.signOut()} className="bg-gold text-midnight hover:bg-gold-hover">
             Sign Out
           </Button>
         </CardContent>

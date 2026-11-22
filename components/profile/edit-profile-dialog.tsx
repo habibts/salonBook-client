@@ -247,7 +247,7 @@ function EditProfileDialog({
             )}
           </div>
 
-          <div className="rounded-xl border border-champagne bg-champagne/30 px-3.5 py-3 text-xs leading-relaxed text-charcoal">
+          <div className="rounded-xl border border-champagne bg-champagne/30 px-3.5 py-3 text-xs leading-relaxed text-charcoal dark:text-ivory">
             Your role, account status and e-mail address are managed by
             SalonBook authentication and cannot be edited here.
           </div>

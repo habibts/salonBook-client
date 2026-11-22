@@ -65,7 +65,7 @@ function SignUpForm() {
       </div>
 
       <Field>
-        <FieldLabel htmlFor="full-name" className="text-midnight">
+        <FieldLabel htmlFor="full-name" className="text-foreground">
           Full Name
         </FieldLabel>
         <Input
@@ -79,7 +79,7 @@ function SignUpForm() {
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="email" className="text-midnight">
+        <FieldLabel htmlFor="email" className="text-foreground">
           Email Address
         </FieldLabel>
         <Input
@@ -93,7 +93,7 @@ function SignUpForm() {
       </Field>
 
       <Field>
-        <FieldLabel htmlFor="password" className="text-midnight">
+        <FieldLabel htmlFor="password" className="text-foreground">
           Password
         </FieldLabel>
         <Input

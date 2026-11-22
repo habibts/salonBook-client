@@ -51,7 +51,7 @@ export function ServiceCategories() {
 
   if (loading) {
     return (
-      <section className="bg-[#151515] py-16 md:py-20">
+      <section className="bg-light-rose py-16 md:py-20 dark:bg-midnight">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="space-y-4">
             <Skeleton className="h-5 w-48" />
@@ -63,7 +63,7 @@ export function ServiceCategories() {
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="relative w-full overflow-hidden rounded-xl border border-[#E9E3D8] sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]"
+                className="relative w-full overflow-hidden rounded-xl border border-soft-border sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] dark:border-dark-border"
               >
                 <Skeleton className="aspect-[4/3] w-full" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -81,9 +81,9 @@ export function ServiceCategories() {
 
   if (error) {
     return (
-      <section className="bg-[#151515] py-16 md:py-20">
+      <section className="bg-light-rose py-16 md:py-20 dark:bg-midnight">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-red-500">{error}</p>
+          <p className="text-destructive">{error}</p>
           <Button onClick={fetchCategories} className="mt-4">
             Retry
           </Button>
@@ -95,12 +95,12 @@ export function ServiceCategories() {
   if (categories.length === 0) return null
 
   return (
-    <section className="bg-[#151515] py-16 md:py-20">
+    <section className="bg-light-rose py-16 md:py-20 dark:bg-midnight">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <p className="text-xs uppercase tracking-widest text-[#C5A46D]">DISCOVER OUR EXPERTISE</p>
-        <h2 className="mt-2 font-heading text-3xl font-semibold text-[#F7F5F0]">Explore Our Services</h2>
-        <div className="mt-2 h-px w-12 bg-[#C5A46D]" />
-        <p className="mt-4 max-w-2xl text-[#77736D]">
+        <p className="text-xs uppercase tracking-widest text-primary-rose dark:text-gold">DISCOVER OUR EXPERTISE</p>
+        <h2 className="mt-2 font-heading text-3xl font-semibold text-dark-text dark:text-white">Explore Our Services</h2>
+        <div className="mt-2 h-px w-12 bg-primary-rose dark:bg-gold" />
+        <p className="mt-4 max-w-2xl text-muted-text dark:text-champagne">
           From precision cuts to premium grooming, discover the perfect service for your style.
         </p>
 
@@ -109,18 +109,18 @@ export function ServiceCategories() {
             <Link
               key={c.name}
               href={`/services?category=${encodeURIComponent(c.name)}`}
-              className="group relative w-full overflow-hidden rounded-xl border border-[#E9E3D8] sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]"
+              className="group relative w-full overflow-hidden rounded-xl border border-soft-border sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] transition-all duration-500 hover:border-primary-rose/50 hover:shadow-xl hover:-translate-y-1 dark:border-dark-border"
             >
               <img
                 src={c.image}
                 alt={c.name}
-                className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#151515]/80 to-[#151515]/20 transition-opacity group-hover:opacity-90" />
+              <div className="absolute inset-0 bg-gradient-to-t from-dark-text/60 to-dark-text/10 transition-opacity duration-500 group-hover:from-dark-text/80 dark:from-midnight/60 dark:to-midnight/10" />
               <div className="absolute bottom-0 left-0 right-0 p-4">
-                <span className="text-xs text-[#C5A46D]">0{i + 1}</span>
+                <span className="text-xs text-primary-rose dark:text-gold">0{i + 1}</span>
                 <h3 className="font-heading text-lg text-white">{c.name}</h3>
-                <span className="inline-flex items-center gap-1 text-sm text-[#C5A46D] transition-transform group-hover:translate-x-1">
+                <span className="inline-flex items-center gap-1 text-sm text-primary-rose transition-transform group-hover:translate-x-1 dark:text-gold">
                   Explore Services <ArrowRight className="size-4" />
                 </span>
               </div>

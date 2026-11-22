@@ -137,7 +137,7 @@ function AccountMenu({ user }: { user: SessionUser }) {
       <DropdownMenuContent
         align="end"
         sideOffset={10}
-        className="w-64 rounded-xl border border-dark-border bg-charcoal p-1.5 text-ivory shadow-xl shadow-black/40 ring-dark-border"
+        className="w-64 rounded-xl border border-dark-border bg-charcoal p-1.5 text-ivory shadow-xl shadow-midnight/40 ring-dark-border"
       >
         {/* User info header */}
         <div className="px-2.5 py-3 border-b border-dark-border">

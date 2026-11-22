@@ -18,6 +18,14 @@
     --color-dark-border: var(--dark-border);
     --color-sage: var(--sage);
     --color-hairline: var(--hairline);
+    /* Legacy aliases retained for the existing Home-page components. */
+    --color-soft-peach: var(--ivory);
+    --color-light-rose: var(--ivory);
+    --color-warm-cream: var(--champagne);
+    --color-primary-rose: var(--primary-rose);
+    --color-dark-text: var(--midnight);
+    --color-muted-text: var(--muted-gray);
+    --color-soft-border: var(--hairline);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -35,6 +43,7 @@
     --color-input: var(--input);
     --color-border: var(--border);
     --color-destructive: var(--destructive);
+    --color-destructive-foreground: var(--destructive-foreground);
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
@@ -63,18 +72,19 @@
     --midnight: #171717; /* Primary Dark #171717 */
     --charcoal: #34312D; /* Secondary Dark #34312D */
     --gold: #b8955a; /* Champagne Gold #B8955A */
-    --gold-hover: #9e7f49; /* Warm Gold hover #9E7F49 */
+    --gold-hover: color-mix(in srgb, var(--gold) 88%, var(--midnight));
     --ivory: #f1ede5; /* Warm Ivory #F1EDE5 */
     --champagne: #e8d8b9; /* Warm Gold #E8D8B9 */
     --muted-gray: #77736d; /* Muted Text #77736D */
-    --dark-border: #4a453d; /* Hairline on dark surfaces */
+    --dark-border: color-mix(in srgb, var(--charcoal) 78%, var(--champagne));
     --sage: #657c67; /* Sage Green #657C67 */
     --hairline: #ded6c8; /* Border #DED6C8 */
+    --primary-rose: var(--charcoal);
 
     /* Light theme: Midnight Gold on Warm Ivory */
     --background: var(--ivory);
     --foreground: var(--midnight);
-    --card: oklch(1 0 0); /* White Surface #FFFFFF */
+    --card: #ffffff; /* Pure White #FFFFFF */
     --card-foreground: var(--midnight);
     --popover: oklch(1 0 0);
     --popover-foreground: var(--midnight);
@@ -86,7 +96,9 @@
     --muted-foreground: var(--muted-gray);
     --accent: var(--gold);
     --accent-foreground: var(--midnight);
-    --destructive: oklch(0.577 0.245 27.325);
+    /* The fixed palette intentionally uses a restrained, warm alert tone. */
+    --destructive: var(--charcoal);
+    --destructive-foreground: var(--ivory);
     --border: var(--hairline);
     --input: var(--hairline);
     --ring: var(--gold);
@@ -100,7 +112,7 @@
     --sidebar-foreground: var(--ivory);
     --sidebar-primary: var(--gold);
     --sidebar-primary-foreground: var(--midnight);
-    --sidebar-accent: #26241f;
+    --sidebar-accent: color-mix(in srgb, var(--midnight) 82%, var(--charcoal));
     --sidebar-accent-foreground: var(--ivory);
     --sidebar-border: var(--dark-border);
     --sidebar-ring: var(--gold);
@@ -109,6 +121,7 @@
 .dark {
     /* Dark theme: Midnight Gold on Midnight Black */
     --background: var(--midnight);
+    --primary-rose: var(--gold);
     --foreground: var(--ivory);
     --card: var(--charcoal);
     --card-foreground: var(--ivory);
@@ -116,13 +129,14 @@
     --popover-foreground: var(--ivory);
     --primary: var(--gold);
     --primary-foreground: var(--midnight);
-    --secondary: #3f3b35;
+    --secondary: var(--charcoal);
     --secondary-foreground: var(--ivory);
-    --muted: #413d37;
+    --muted: color-mix(in srgb, var(--charcoal) 88%, var(--midnight));
     --muted-foreground: var(--champagne);
     --accent: var(--gold);
     --accent-foreground: var(--midnight);
-    --destructive: oklch(0.704 0.191 22.216);
+    --destructive: var(--champagne);
+    --destructive-foreground: var(--midnight);
     --border: var(--dark-border);
     --input: var(--dark-border);
     --ring: var(--gold);
@@ -135,7 +149,7 @@
     --sidebar-foreground: var(--ivory);
     --sidebar-primary: var(--gold);
     --sidebar-primary-foreground: var(--midnight);
-    --sidebar-accent: #26241f;
+    --sidebar-accent: color-mix(in srgb, var(--charcoal) 88%, var(--midnight));
     --sidebar-accent-foreground: var(--ivory);
     --sidebar-border: var(--dark-border);
     --sidebar-ring: var(--gold);
@@ -147,6 +161,8 @@
     }
   body {
     @apply bg-background text-foreground;
+    min-width: 320px;
+    transition: background-color 180ms ease, color 180ms ease;
     }
   html {
     @apply font-sans;
@@ -154,6 +170,10 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
     }
+  :focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 3px;
+  }
   ::selection {
     background: color-mix(in oklch, var(--gold) 45%, transparent);
     color: var(--midnight);
@@ -165,14 +185,14 @@
 /* Soft, layered card shadow — warm and low, never heavy */
 @utility surface-raised {
     box-shadow:
-        0 1px 2px rgba(23, 23, 23, 0.04),
-        0 12px 32px -24px rgba(23, 23, 23, 0.35);
+        0 1px 2px color-mix(in srgb, var(--midnight) 5%, transparent),
+        0 12px 32px -24px color-mix(in srgb, var(--midnight) 36%, transparent);
 }
 
 @utility surface-floating {
     box-shadow:
-        0 1px 2px rgba(23, 23, 23, 0.05),
-        0 24px 48px -32px rgba(23, 23, 23, 0.45);
+        0 1px 2px color-mix(in srgb, var(--midnight) 6%, transparent),
+        0 24px 48px -32px color-mix(in srgb, var(--midnight) 46%, transparent);
 }
 
 /* Subtle rise-in used for stat cards and page sections */
@@ -192,6 +212,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        scroll-behavior: auto !important;
+        transition-duration: 0.01ms !important;
+    }
+
     .animate-rise {
         animation: none !important;
     }

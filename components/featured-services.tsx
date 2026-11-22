@@ -56,24 +56,24 @@ export function FeaturedServices() {
   }, [])
 
   return (
-    <section className="bg-[#151515] py-12 md:py-16 lg:py-20">
+    <section className="bg-midnight py-14 md:py-20 lg:py-24">
       <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
-        <p className="text-sm font-medium uppercase tracking-widest text-[#C5A46D]">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
           OUR PREMIUM SERVICES
         </p>
-        <h2 className="mt-3 font-heading text-3xl font-semibold text-[#F7F5F0] sm:text-4xl">
+        <h2 className="mt-3 font-heading text-3xl font-semibold text-ivory sm:text-4xl">
           Experience the Art of Grooming
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-[#C7C2B9]">
+        <p className="mx-auto mt-4 max-w-2xl leading-7 text-champagne">
           Discover premium grooming services designed to elevate your style and confidence.
         </p>
       </div>
 
-      <div className="mx-auto mt-10 max-w-7xl bg-[#F7F5F0] p-6 sm:p-8">
+      <div className="mx-auto mt-10 max-w-7xl rounded-2xl bg-ivory p-4 sm:p-6 lg:p-8 dark:bg-charcoal/70">
         {loading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="flex h-full flex-col overflow-hidden border-[#3A3834] bg-[#292929]">
+              <Card key={i} className="flex h-full flex-col border-border bg-card">
                 <Skeleton className="aspect-[16/9] w-full" />
                 <CardHeader className="flex-1 p-4">
                   <Skeleton className="h-6 w-3/4 mb-2" />
@@ -94,13 +94,13 @@ export function FeaturedServices() {
           </div>
         ) : error ? (
           <div className="text-center">
-            <p className="text-red-500">{error}</p>
+            <p className="text-destructive dark:text-champagne">{error}</p>
             <Button onClick={fetchServices} className="mt-4">
               Retry
             </Button>
           </div>
         ) : services.length === 0 ? (
-          <p className="text-center text-[#77736D]">No services available.</p>
+          <p className="text-center text-muted-foreground dark:text-champagne">No services available.</p>
         ) : (
           <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -110,7 +110,7 @@ export function FeaturedServices() {
             </div>
             <div className="mt-8 text-center">
               <Button
-                className="border border-[#151515] bg-[#151515] text-[#C5A46D] hover:bg-[#292929] hover:text-[#F7F5F0]"
+                className="border border-gold/50 bg-midnight text-ivory hover:border-gold hover:bg-charcoal"
                 onClick={() => router.push("/services")}
               >
                 Explore All Services

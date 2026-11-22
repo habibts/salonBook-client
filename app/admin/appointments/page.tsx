@@ -275,7 +275,7 @@ export default function AdminAppointmentsPage() {
                             <AlertDialogTrigger>
                               <Button
                                 size="sm"
-                                className="bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]"
+                                className="bg-gold text-midnight hover:bg-gold-hover"
                                 disabled={confirming === a._id}
                               >
                                 {confirming === a._id ? "Confirming…" : "Confirm"}

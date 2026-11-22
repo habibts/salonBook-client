@@ -5,11 +5,11 @@ import { cn } from "@/lib/utils"
 type StatTone = "gold" | "amber" | "blue" | "green" | "red" | "sage" | "neutral"
 
 const TONE_CHIP: Record<StatTone, string> = {
-  gold: "bg-gold/10 text-gold",
-  amber: "bg-[#FFF4DF] text-[#9A6700]",
-  blue: "bg-[#E9F0FE] text-[#2F5FA8]",
-  green: "bg-[#E9F2EA] text-[#3C6B41]",
-  red: "bg-[#FBEAE8] text-[#B03A34]",
+  gold: "bg-gold/10 text-charcoal dark:text-gold",
+  amber: "bg-champagne/50 text-charcoal dark:text-ivory",
+  blue: "bg-gold/10 text-charcoal dark:text-champagne",
+  green: "bg-sage/15 text-sage",
+  red: "bg-champagne/60 text-charcoal dark:text-ivory",
   sage: "bg-sage/10 text-sage",
   neutral: "bg-background text-muted-foreground",
 }

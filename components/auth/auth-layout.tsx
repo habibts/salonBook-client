@@ -20,12 +20,12 @@ function AuthLayout({
       {/* Subtle decorative gold glow (mobile / tablet) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(197,164,109,0.12),transparent_55%)] lg:hidden"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--gold),transparent_55%)] opacity-15 lg:hidden"
       />
 
       {/* Form panel */}
       <div className="relative flex min-h-full items-center justify-center p-4 py-12 sm:px-6 lg:p-10">
-        <div className="w-full max-w-md rounded-2xl border border-champagne bg-white p-6 shadow-xl shadow-black/30 sm:p-8">
+        <div className="w-full max-w-md rounded-2xl border border-champagne bg-card p-6 shadow-xl shadow-midnight/30 sm:p-8">
           <div className="text-center">
             <Link
               href="/"
@@ -34,10 +34,10 @@ function AuthLayout({
             >
               SalonBook
             </Link>
-            <h1 className="mt-6 font-heading text-3xl font-semibold text-midnight">
+            <h1 className="mt-6 font-heading text-3xl font-semibold text-foreground">
               {title}
             </h1>
-            <p className="mt-2 text-sm leading-relaxed text-muted-gray">
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               {description}
             </p>
           </div>
@@ -46,7 +46,7 @@ function AuthLayout({
 
           <div className="my-6 flex items-center gap-3">
             <span aria-hidden="true" className="h-px flex-1 bg-champagne" />
-            <span className="text-xs font-medium tracking-wider text-muted-gray uppercase">
+            <span className="text-xs font-medium tracking-wider text-muted-foreground uppercase">
               or
             </span>
             <span aria-hidden="true" className="h-px flex-1 bg-champagne" />
@@ -54,7 +54,7 @@ function AuthLayout({
 
           <GoogleButton />
 
-          <div className="mt-6 text-center text-sm text-muted-gray">
+          <div className="mt-6 text-center text-sm text-muted-foreground">
             {footer}
           </div>
         </div>

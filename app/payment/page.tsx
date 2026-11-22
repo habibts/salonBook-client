@@ -119,7 +119,7 @@ function CopyButton({ value }: { value: string }) {
       className="shrink-0 text-muted-foreground hover:text-gold"
     >
       {copied ? (
-        <Check className="text-[#657C67]" aria-hidden="true" />
+        <Check className="text-sage" aria-hidden="true" />
       ) : (
         <Copy aria-hidden="true" />
       )}
@@ -208,7 +208,7 @@ function SummaryCard({
             <SummaryRow
               label="Discount"
               value={`− ${money(discount)}`}
-              valueClassName="text-[#657C67]"
+              valueClassName="text-sage"
             />
           )}
         </div>
@@ -322,8 +322,8 @@ function CheckoutForm({
                 className={cn(
                   "mt-4 rounded-xl border px-4 py-3 text-xs leading-relaxed",
                   succeeded
-                    ? "border-[#CBDFCD] bg-[#E9F2EA] text-[#3C6B41]"
-                    : "border-[#F2CECC] bg-[#FBEAE8] text-[#B03A34]"
+                    ? "border-sage/35 bg-sage/15 text-sage"
+                    : "border-gold/40 bg-champagne/60 text-charcoal dark:text-ivory"
                 )}
               >
                 {message}
@@ -343,7 +343,7 @@ function CheckoutForm({
               type="button"
               onClick={handlePay}
               disabled={!stripe || processing}
-              className="h-11 w-full gap-2 rounded-xl bg-[#171717] px-5 text-sm font-semibold text-white hover:bg-[#34312D]"
+              className="h-11 w-full gap-2 rounded-xl bg-midnight px-5 text-sm font-semibold text-white hover:bg-charcoal"
             >
               {processing ? (
                 <>
@@ -410,7 +410,7 @@ function ErrorState({
             <Button
               type="button"
               onClick={onRetry}
-              className="mt-2 h-11 rounded-xl bg-[#171717] px-6 text-sm font-semibold text-white hover:bg-[#34312D]"
+              className="mt-2 h-11 rounded-xl bg-midnight px-6 text-sm font-semibold text-white hover:bg-charcoal"
             >
               Try again
             </Button>
@@ -604,7 +604,7 @@ function PaymentPageContent() {
                 >
                   <SummaryCard appointment={appointment} total={total}>
                     {checkoutError && (
-                      <p className="rounded-xl border border-[#F2CECC] bg-[#FBEAE8] px-4 py-3 text-xs leading-relaxed break-words text-[#B03A34]">
+                      <p className="rounded-xl border border-gold/40 bg-champagne/60 px-4 py-3 text-xs leading-relaxed break-words text-charcoal dark:text-ivory">
                         {checkoutError}
                       </p>
                     )}
@@ -612,7 +612,7 @@ function PaymentPageContent() {
                       type="button"
                       onClick={handleCheckout}
                       disabled={creating}
-                      className="h-11 w-full gap-2 rounded-xl bg-[#171717] px-5 text-sm font-semibold text-white hover:bg-[#34312D]"
+                      className="h-11 w-full gap-2 rounded-xl bg-midnight px-5 text-sm font-semibold text-white hover:bg-charcoal"
                     >
                       {creating ? (
                         <>
