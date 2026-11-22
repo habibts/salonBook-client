@@ -51,15 +51,22 @@ function setupCrossTabLogoutListener(clearTokenData: () => void) {
   return () => authBroadcastChannel.removeEventListener('message', handleMessage)
 }
 
+// Function to update token data from outside React components (e.g., after 401 refresh)
+export function setTokenDataModule(data: JwtTokenData): void {
+  currentTokenData = data
+  currentIsRestoring = false
+  currentRestorationError = null
+  notifyRestorationComplete()
+}
+
 const TokenStoreContext = createContext<TokenStoreContextType | null>(null)
 
 export function TokenStoreProvider({ children }: { children: ReactNode }) {
   const [tokenData, setTokenDataState] = useState<JwtTokenData | null>(null)
   const [isRestoring, setIsRestoring] = useState(true)
   const [restorationError, setRestorationError] = useState<string | null>(null)
-  const [isIssuing, setIsIssuing] = useState(false)
 
-  const { data: session } = authClient.useSession()
+  const { data: session, isPending } = authClient.useSession()
 
   // Keep module-level refs in sync with React state
   const tokenDataRef = useRef(tokenData)
@@ -97,91 +104,50 @@ export function TokenStoreProvider({ children }: { children: ReactNode }) {
     return setupCrossTabLogoutListener(clearTokenData)
   }, [clearTokenData])
 
-  // Session restoration effect with retry logic
+  // Session restoration: always use API to issue JWT (cookie is httpOnly, can't read client-side)
   useEffect(() => {
-    let cancelled = false
-    let retryCount = 0
-    const MAX_RETRIES = 3
-    const BASE_DELAY_MS = 1000
+    let mounted = true
 
     async function restoreSession() {
-      // Skip if we already have a token (check both ref and state)
-      if (tokenDataRef.current?.token || tokenData?.token) {
-        setIsRestoring(false)
-        notifyRestorationComplete()
+      // If we already have a valid token, we're done
+      if (tokenDataRef.current?.token) {
+        if (mounted) {
+          setIsRestoring(false)
+          notifyRestorationComplete()
+        }
         return
       }
 
-      // Skip if no session yet (still loading)
-      if (!session) {
+      // If Better Auth session is still loading, wait for it
+      if (isPending) {
         return
       }
 
-      // Skip if session is explicitly null (logged out)
-      if (!session.user) {
-        setIsRestoring(false)
-        notifyRestorationComplete()
+      // If no session (logged out), we're done
+      if (!session?.user) {
+        if (mounted) {
+          setIsRestoring(false)
+          notifyRestorationComplete()
+        }
         return
       }
 
-      // Prevent duplicate issuance
-      if (isIssuing) {
-        return
-      }
-
-      setIsIssuing(true)
-      setRestorationError(null)
-
-      async function attemptRestoration() {
-        try {
-          const result = await issueJWT()
-          
-          if (cancelled) return
-
-          if (result.success && result.data) {
-            setTokenDataState(result.data)
-          } else if (result.error) {
-            // Only set error if it's not a 401 (which means no session)
-            if (!result.error.includes('Unauthorized') && !result.error.includes('401')) {
-              // Check if it's a network error that we should retry
-              const isNetworkError = result.error.toLowerCase().includes('network') || 
-                                   result.error.toLowerCase().includes('fetch') ||
-                                   result.error.toLowerCase().includes('timeout')
-              
-              if (isNetworkError && retryCount < MAX_RETRIES) {
-                retryCount++
-                const delay = BASE_DELAY_MS * Math.pow(2, retryCount - 1) // Exponential backoff: 1s, 2s, 4s
-                await new Promise((resolve) => setTimeout(resolve, delay))
-                if (!cancelled) {
-                  await attemptRestoration()
-                }
-                return
-              }
-              
-              setRestorationError(result.error)
-            }
-          }
-        } catch {
-          if (!cancelled) {
-            const isRetryable = retryCount < MAX_RETRIES
-            if (isRetryable) {
-              retryCount++
-              const delay = BASE_DELAY_MS * Math.pow(2, retryCount - 1)
-              await new Promise((resolve) => setTimeout(resolve, delay))
-              if (!cancelled) {
-                await attemptRestoration()
-              }
-              return
-            }
-            setRestorationError('Failed to restore session')
-          }
+      // Issue JWT via API (requires Better Auth session cookie, which is sent automatically)
+      try {
+        const result = await issueJWT()
+        if (result.success && result.data && mounted) {
+          setTokenDataState(result.data)
+        } else if (!result.success && mounted) {
+          setRestorationError(result.error ?? 'Failed to issue JWT')
+        }
+      } catch {
+        // Network error, will retry on next session change
+        if (mounted) {
+          setRestorationError('Network error during session restoration')
         }
       }
 
-      await attemptRestoration()
-
-      if (!cancelled) {
-        setIsIssuing(false)
+      if (mounted) {
         setIsRestoring(false)
         notifyRestorationComplete()
       }
@@ -190,9 +156,9 @@ export function TokenStoreProvider({ children }: { children: ReactNode }) {
     restoreSession()
 
     return () => {
-      cancelled = true
+      mounted = false
     }
-  }, [session, isIssuing, tokenData])
+  }, [session, isPending])
 
   return (
     <TokenStoreContext.Provider
@@ -251,7 +217,7 @@ export function waitForRestorationEvent(): Promise<void> {
     setTimeout(() => {
       unsubscribe()
       resolve()
-    }, 10000)
+    }, 5000)
   })
 }
 

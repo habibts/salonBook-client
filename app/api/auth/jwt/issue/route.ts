@@ -30,6 +30,8 @@ export async function POST() {
       email: session.user.email,
       name: session.user.name,
       role,
+      image: session.user.image,
+      createdAt: session.user.createdAt,
     },
   })
 

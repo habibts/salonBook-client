@@ -17,8 +17,8 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatCard, type StatTone } from "@/components/dashboard/stat-card"
 import { StatusBadge } from "@/components/dashboard/status-badge"
-import { authClient } from "@/lib/auth-client"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
+import { useTokenStore } from "@/lib/token-store"
 import { showError } from "@/lib/toast"
 
 interface Appointment {
@@ -35,12 +35,13 @@ interface Appointment {
 
 export default function CustomerDashboardPage() {
   const router = useRouter()
-  const { data: session } = authClient.useSession()
-  const user = session?.user
+  const { tokenData, isRestoring, isAuthenticated } = useTokenStore()
   const { expressFetch } = useExpressApi()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const user = tokenData?.user
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
@@ -48,7 +49,11 @@ export default function CustomerDashboardPage() {
     setError(null)
     try {
       const data = await expressFetch<Appointment[]>("/appointments")
-      setAppointments(data.filter((a) => a.customerId === user.id))
+      if (Array.isArray(data)) {
+        setAppointments(data.filter((a) => a.customerId === user.id))
+      } else {
+        setAppointments([])
+      }
     } catch (e) {
       if (e instanceof ExpressApiError && e.status === 401) {
         setError("Your session has expired. Please sign in again.")
@@ -64,10 +69,13 @@ export default function CustomerDashboardPage() {
     }
   }, [expressFetch, user])
 
+  // Wait for authentication restoration to complete before fetching
   useEffect(() => {
+    if (isRestoring) return
+    if (!isAuthenticated) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAppointments()
-  }, [fetchAppointments])
+  }, [isRestoring, isAuthenticated, fetchAppointments])
 
   const total = appointments.length
   const pending = appointments.filter((a) => a.status === "Pending").length
@@ -92,6 +100,62 @@ export default function CustomerDashboardPage() {
   ]
 
   const firstName = user?.name?.split(" ")[0]
+
+  // Show loading while authentication is restoring
+  if (isRestoring) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          eyebrow="My SalonBook"
+          title="Loading…"
+          description="Restoring your session"
+        />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {cards.map((c, i) => (
+            <StatCard
+              key={c.title}
+              label={c.title}
+              value="…"
+              icon={c.icon}
+              tone={c.tone}
+              hint={c.hint}
+              order={i}
+            />
+          ))}
+        </div>
+        <Card className="animate-rise">
+          <CardContent className="pt-4">
+            <ul className="space-y-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <li key={i}>
+                  <Skeleton className="h-14 w-full rounded-lg" />
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Show sign-in prompt if not authenticated
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          eyebrow="My SalonBook"
+          title="Please sign in"
+          description="You need to be signed in to view your dashboard."
+          action={
+            <Button onClick={() => router.push("/sign-in")}>
+              Sign In
+              <ArrowRight className="ml-1 size-4" aria-hidden="true" />
+            </Button>
+          }
+        />
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

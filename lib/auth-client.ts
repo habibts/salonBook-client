@@ -13,6 +13,8 @@ export interface JwtTokenData {
     email: string
     name: string | null
     role: 'customer' | 'admin'
+    image?: string | null
+    createdAt?: Date | string | null
   }
 }
 

@@ -1,7 +1,8 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { authClient } from "@/lib/auth-client"
+import { useTokenStore } from "@/lib/token-store"
+import { useExpressApi } from "@/lib/express-api"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,8 +26,11 @@ function getInitials(name?: string) {
 }
 
 export default function ProfilePage() {
-  const { data: session, isPending } = authClient.useSession()
-  const user = session?.user
+  const { tokenData, isRestoring, isAuthenticated, clearTokenData } = useTokenStore()
+  const { expressFetch } = useExpressApi()
+  const user = tokenData?.user
+  const userImage = user?.image ?? undefined
+  const avatarSrc = userImage as string | undefined
   const [open, setOpen] = useState(false)
   const [name, setName] = useState(user?.name ?? "")
   const [saving, setSaving] = useState(false)
@@ -34,56 +38,8 @@ export default function ProfilePage() {
   const [preview, setPreview] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  async function save() {
-    if (!name.trim()) {
-      showError({ title: "Name Required", description: "Please enter your name." })
-      return
-    }
-    setSaving(true)
-    try {
-      await authClient.updateUser({ name: name.trim() })
-      showSuccess({ title: "Profile Updated", description: "Your profile has been updated successfully." })
-      setOpen(false)
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to update profile. Please try again."
-      showError({ title: "Profile Update Failed", description: message })
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!["image/jpeg","image/png","image/webp"].includes(file.type)) {
-      showError({ title: "Invalid Image Type", description: "Only JPG, PNG, and WEBP images are allowed." })
-      return
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      showError({ title: "Image Too Large", description: "Maximum size is 5 MB." })
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => setPreview(reader.result as string)
-    reader.readAsDataURL(file)
-  }
-
-  async function saveImage() {
-    if (!preview) return
-    setUploading(true)
-    try {
-      await authClient.updateUser({ image: preview })
-      showSuccess({ title: "Profile Image Updated", description: "Your profile photo has been updated." })
-      setPreview(null)
-    } catch (e) {
-      const message = e instanceof Error ? e.message : "Failed to upload image. Please try again."
-      showError({ title: "Image Upload Failed", description: message })
-    } finally {
-      setUploading(false)
-    }
-  }
-
-  if (isPending) {
+  // Show loading skeleton while restoring auth
+  if (isRestoring) {
     return (
       <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
         <div className="rounded-2xl bg-[#171717] p-6 text-[#F1EDE5]">
@@ -152,17 +108,90 @@ export default function ProfilePage() {
     )
   }
 
+  // Not authenticated - redirect to sign-in
+  if (!isAuthenticated || !user) {
+    // In a real app, you might redirect here
+    return (
+      <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
+        <Card className="border-[#DED6C8] bg-white">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-[#34312D]">Please sign in to view your profile.</p>
+            <Button onClick={() => window.location.href = "/sign-in"} className="mt-4 bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  async function save() {
+    if (!name.trim()) {
+      showError({ title: "Name Required", description: "Please enter your name." })
+      return
+    }
+    setSaving(true)
+    try {
+      // Use expressFetch to call protected Express API endpoint
+      await expressFetch("/api/user/profile", {
+        method: "PUT",
+        body: JSON.stringify({ name: name.trim() }),
+      })
+      showSuccess({ title: "Profile Updated", description: "Your profile has been updated successfully." })
+      setOpen(false)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to update profile. Please try again."
+      showError({ title: "Profile Update Failed", description: message })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!["image/jpeg","image/png","image/webp"].includes(file.type)) {
+      showError({ title: "Invalid Image Type", description: "Only JPG, PNG, and WEBP images are allowed." })
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      showError({ title: "Image Too Large", description: "Maximum size is 5 MB." })
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => setPreview(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  async function saveImage() {
+    if (!preview) return
+    setUploading(true)
+    try {
+      await expressFetch("/api/user/profile/image", {
+        method: "PUT",
+        body: JSON.stringify({ image: preview }),
+      })
+      showSuccess({ title: "Profile Image Updated", description: "Your profile photo has been updated." })
+      setPreview(null)
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Failed to upload image. Please try again."
+      showError({ title: "Image Upload Failed", description: message })
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-6">
       <div className="rounded-2xl bg-[#171717] p-6 text-[#F1EDE5]">
         <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <Avatar className="size-16 border-2 border-[#B8955A]">
-              {user?.image ? <AvatarImage src={user.image} /> : null}
-              <AvatarFallback>{getInitials(user?.name)}</AvatarFallback>
+              {avatarSrc ? <AvatarImage src={avatarSrc} /> : null}
+              <AvatarFallback>{getInitials(user?.name ?? undefined)}</AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="font-heading text-2xl font-semibold">{isPending ? "Loading..." : user?.name}</h1>
+              <h1 className="font-heading text-2xl font-semibold">{user?.name}</h1>
               <p className="text-sm text-[#E8D8B9]">{user?.email}</p>
               <div className="mt-1 flex gap-2">
                 <Badge className="bg-[#B8955A] text-[#171717]">Customer</Badge>
@@ -278,7 +307,7 @@ export default function ProfilePage() {
         <CardContent className="space-y-4">
           <p className="text-[#34312D]">Authentication Provider: Email/Password</p>
           <p className="text-sm text-[#77736D]">Password change requires backend support not currently available.</p>
-          <Button onClick={() => authClient.signOut()} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
+          <Button onClick={() => { clearTokenData(); window.location.href = "/sign-in"; }} className="bg-[#B8955A] text-[#171717] hover:bg-[#AE8C56]">
             Sign Out
           </Button>
         </CardContent>

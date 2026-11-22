@@ -63,12 +63,13 @@ function AuthLayout({
       {/* Salon imagery panel (desktop) */}
       <div className="relative h-full hidden lg:block">
         <Image
-          src="/images/hero-barbershop.jpg"
-          alt=""
+          src="https://i.ibb.co.com/m5zjpfKc/6fc1b179-f968-4eb0-9e5d-da7065e54e05.jpg"
+          alt="Premium salon interior with modern styling stations and warm lighting"
           aria-hidden="true"
           fill
+          priority
           sizes="50vw"
-          className="object-cover object-center"
+          className="object-cover object-[center_25%]"
         />
         <div
           aria-hidden="true"

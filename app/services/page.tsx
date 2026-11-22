@@ -17,6 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { ServiceCard } from "@/components/service-card"
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { showError } from "@/lib/toast"
+import { fetchWithTimeout } from "@/lib/fetch"
 
 interface Service {
   _id: string
@@ -44,7 +45,7 @@ function ServicesPageContent() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/services`, { cache: "no-store" })
+      const res = await fetchWithTimeout(`${API_BASE}/services`, { cache: "no-store" })
       if (!res.ok) throw new Error("Failed to fetch services")
       const data = (await res.json()) as Service[]
       setServices(data)

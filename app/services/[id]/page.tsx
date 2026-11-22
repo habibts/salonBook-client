@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { authClient } from "@/lib/auth-client"
 import { ServiceCard } from "@/components/service-card"
 import { showError } from "@/lib/toast"
+import { fetchWithTimeout } from "@/lib/fetch"
 
 interface Service {
   _id: string
@@ -50,7 +51,7 @@ export default function ServiceDetailsPage() {
       setAllServices([])
 
       try {
-        const res = await fetch(`${API_BASE}/services`, {
+        const res = await fetchWithTimeout(`${API_BASE}/services`, {
           signal: controller.signal,
           cache: "no-store",
         })

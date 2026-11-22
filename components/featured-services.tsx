@@ -8,6 +8,7 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ServiceCard } from "@/components/service-card"
 import { showError } from "@/lib/toast"
+import { fetchWithTimeout } from "@/lib/fetch"
 
 interface Service {
   _id: string
@@ -32,7 +33,7 @@ export function FeaturedServices() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/services`)
+      const res = await fetchWithTimeout(`${API_BASE}/services`)
       if (!res.ok) throw new Error("Failed to fetch services")
       const data = (await res.json()) as Service[]
       const active = data

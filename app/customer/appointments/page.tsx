@@ -4,7 +4,6 @@ import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { CalendarDays, Clock, CreditCard, Scissors } from "lucide-react"
 
-import { authClient } from "@/lib/auth-client"
 import { Copy } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/dashboard/page-header"
 import { StatusBadge } from "@/components/dashboard/status-badge"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
+import { useTokenStore } from "@/lib/token-store"
 import { showSuccess, showError } from "@/lib/toast"
 
 interface Appointment {
@@ -30,13 +30,14 @@ interface Appointment {
 
 export default function MyAppointmentsPage() {
   const router = useRouter()
-  const { data: session } = authClient.useSession()
-  const user = session?.user
+  const { tokenData, isRestoring, isAuthenticated } = useTokenStore()
   const { expressFetch } = useExpressApi()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [cancelling, setCancelling] = useState<string | null>(null)
+
+  const user = tokenData?.user
 
   const fetchAppointments = useCallback(async () => {
     if (!user) return
@@ -44,7 +45,11 @@ export default function MyAppointmentsPage() {
     setError(null)
     try {
       const data = await expressFetch<Appointment[]>("/appointments")
-      setAppointments(data.filter((a) => a.customerId === user.id))
+      if (Array.isArray(data)) {
+        setAppointments(data.filter((a) => a.customerId === user.id))
+      } else {
+        setAppointments([])
+      }
     } catch (e) {
       if (e instanceof ExpressApiError && e.status === 401) {
         setError("Your session has expired. Please sign in again.")
@@ -60,10 +65,13 @@ export default function MyAppointmentsPage() {
     }
   }, [expressFetch, user])
 
+  // Wait for authentication restoration to complete before fetching
   useEffect(() => {
+    if (isRestoring) return
+    if (!isAuthenticated) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAppointments()
-  }, [fetchAppointments])
+  }, [isRestoring, isAuthenticated, fetchAppointments])
 
   async function cancel(id: string) {
     setCancelling(id)
@@ -85,6 +93,63 @@ export default function MyAppointmentsPage() {
     } finally {
       setCancelling(null)
     }
+  }
+
+  // Show loading while authentication is restoring
+  if (isRestoring) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          eyebrow="My bookings"
+          title="My Appointments"
+          description="Loading your appointments…"
+        />
+        <div className="grid gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Card key={i} className="animate-rise transition-all duration-300">
+              <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center p-4">
+                <Skeleton className="h-24 w-full shrink-0 rounded-lg sm:w-24" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Skeleton className="h-6 w-48" />
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-5 w-24" />
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-sm text-muted-foreground">
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-40" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-8 w-24" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Show sign-in prompt if not authenticated
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          eyebrow="My bookings"
+          title="My Appointments"
+          description="You need to be signed in to view your appointments."
+        />
+        <div className="rounded-xl border border-border bg-card px-6 py-10 text-center">
+          <p className="text-sm text-muted-foreground">Please sign in to view your appointments.</p>
+          <Button onClick={() => router.push("/sign-in")} className="mt-4">
+            Sign In
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   return (

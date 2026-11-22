@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { showError } from "@/lib/toast"
+import { fetchWithTimeout } from "@/lib/fetch"
 
 interface Service {
   _id: string
@@ -25,7 +26,7 @@ export function ServiceCategories() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API_BASE}/services`)
+      const res = await fetchWithTimeout(`${API_BASE}/services`)
       if (!res.ok) throw new Error("Failed to fetch services")
       const data = (await res.json()) as Service[]
       const active = data.filter((s) => s.status === "active")

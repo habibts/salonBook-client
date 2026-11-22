@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { authClient } from "@/lib/auth-client"
+import { useTokenStore } from "@/lib/token-store"
 import { useExpressApi, ExpressApiError } from "@/lib/express-api"
 import { showSuccess, showError } from "@/lib/toast"
 
@@ -22,16 +22,18 @@ interface Service {
   status: string
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001"
 const slots = ["09:00", "10:00", "11:00", "12:00", "14:00", "15:00", "16:00", "17:00"]
 const PLACEHOLDER_IMAGE = "/images/hero-barbershop.jpg"
+import { fetchWithTimeout } from "@/lib/fetch"
 
 function BookingContent() {
   const params = useSearchParams()
   const serviceId = params.get("serviceId") ?? ""
   const router = useRouter()
-  const { data: session } = authClient.useSession()
-  const user = session?.user
+  const { tokenData, isRestoring, isAuthenticated } = useTokenStore()
   const { expressFetch } = useExpressApi()
+  const user = tokenData?.user
   const [service, setService] = useState<Service | null>(null)
   const [date, setDate] = useState("")
   const [slot, setSlot] = useState("")
@@ -40,18 +42,39 @@ function BookingContent() {
   const [submitting, setSubmitting] = useState(false)
   const [imageError, setImageError] = useState(false)
 
+  // Wait for authentication restoration to complete before fetching
   useEffect(() => {
+    if (isRestoring) return
     if (!serviceId) return
-    expressFetch<Service[]>("/services")
-      .then((data) => {
-        const found = data.find((s) => s._id === serviceId) ?? null
-        setService(found)
-      })
-      .catch(() => {
-        setService(null)
-      })
-      .finally(() => setLoading(false))
-  }, [serviceId, expressFetch])
+
+    let cancelled = false
+
+    async function loadService() {
+      setLoading(true)
+      try {
+        const response = await fetchWithTimeout(`${API_BASE}/services`)
+        const data: Service[] = await response.json()
+        if (!cancelled) {
+          const found = data.find((s) => s._id === serviceId) ?? null
+          setService(found)
+        }
+      } catch {
+        if (!cancelled) {
+          setService(null)
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadService()
+
+    return () => {
+      cancelled = true
+    }
+  }, [serviceId, isRestoring])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -91,6 +114,62 @@ function BookingContent() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  // Show loading while authentication is restoring
+  if (isRestoring) {
+    return (
+      <div className="container mx-auto max-w-3xl px-4 py-8">
+        <Card className="border-[#E9E3D8] bg-white">
+          <CardHeader>
+            <CardTitle className="font-heading text-[#151515]">
+              <Skeleton className="h-6 w-48" />
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="mb-4 aspect-[16/9] w-full rounded-lg" />
+            <p className="text-[#77736D]"><Skeleton className="h-4 w-64" /></p>
+            <form className="mt-6 space-y-4">
+              <div>
+                <label className="text-sm text-[#151515]">Date</label>
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div>
+                <label className="text-sm text-[#151515]">Time Slot</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {slots.map((s) => (
+                    <Skeleton key={s} className="h-10 w-full" />
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-sm text-[#151515]">Message</label>
+                <Skeleton className="h-24 w-full" />
+              </div>
+              <Button disabled className="w-full">
+                <Skeleton className="h-10 w-full" />
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  // Show sign-in prompt if not authenticated
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="container mx-auto max-w-3xl px-4 py-8">
+        <Card className="border-[#E9E3D8] bg-white">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-[#151515]">Please sign in to book an appointment.</p>
+            <Button onClick={() => router.push("/sign-in")} className="mt-4 bg-[#C5A46D] text-[#151515] hover:bg-[#AE8C56]">
+              Sign In
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   if (loading) {

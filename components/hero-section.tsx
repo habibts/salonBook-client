@@ -9,7 +9,7 @@ export function HeroSection() {
   return (
     <section className="relative isolate flex h-[280px] items-center overflow-hidden bg-midnight sm:h-[320px] md:h-[360px] lg:h-[380px]">
       <Image
-        src="/images/hero-barbershop.jpg"
+        src="https://i.ibb.co.com/m5zjpfKc/6fc1b179-f968-4eb0-9e5d-da7065e54e05.jpg"
         alt="Master barber grooming a client in a premium barbershop with warm gold lighting"
         fill
         priority
