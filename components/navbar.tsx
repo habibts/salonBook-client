@@ -122,9 +122,9 @@ function AccountMenu({ user }: { user: SessionUser }) {
       <DropdownMenuTrigger
         type="button"
         aria-label="Open account menu"
-        className="flex items-center gap-2 cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-midnight"
+        className="group flex items-center gap-2 rounded-full p-0.5 outline-none transition-colors hover:bg-ivory/5 focus-visible:ring-2 focus-visible:ring-gold/60 focus-visible:ring-offset-2 focus-visible:ring-offset-midnight"
       >
-        <Avatar className="ring-2 ring-dark-border transition-shadow hover:ring-gold/50">
+        <Avatar className="ring-2 ring-dark-border transition-all duration-300 group-hover:ring-gold/60">
           {user.image ? (
             <AvatarImage src={user.image} alt={`${user.name}'s avatar`} />
           ) : null}
@@ -132,23 +132,23 @@ function AccountMenu({ user }: { user: SessionUser }) {
             {getInitials(user.name)}
           </AvatarFallback>
         </Avatar>
-        <ChevronDown className="size-4 text-ivory/70 transition-transform group-data-[state=open]:rotate-180" aria-hidden="true" />
+        <ChevronDown className="size-4 text-ivory/70 transition-transform duration-300 group-data-[state=open]:rotate-180 group-hover:text-gold" aria-hidden="true" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
         sideOffset={10}
-        className="w-64 rounded-xl border border-dark-border bg-charcoal p-1.5 text-ivory shadow-xl shadow-midnight/40 ring-dark-border"
+        className="w-64 rounded-2xl border border-dark-border bg-charcoal p-2 text-ivory shadow-2xl shadow-midnight/50 ring-1 ring-gold/10"
       >
         {/* User info header */}
-        <div className="px-2.5 py-3 border-b border-dark-border">
-          <p className="font-medium text-ivory truncate">{user.name}</p>
+        <div className="border-b border-dark-border px-2.5 py-3.5">
+          <p className="truncate font-medium text-ivory">{user.name}</p>
           <p className="text-xs text-ivory/60 truncate">{user.email}</p>
           <p className="text-xs text-champagne capitalize">{userRole}</p>
         </div>
         <DropdownMenuItem
           closeOnClick
           onClick={() => router.push(dashboardHref)}
-          className="cursor-pointer gap-2.5 px-2.5 py-2 text-ivory hover:bg-gold/10 hover:text-gold focus:bg-gold/10 focus:text-gold"
+          className="cursor-pointer gap-2.5 px-2.5 py-2.5 text-ivory transition-colors hover:bg-gold/10 hover:text-gold focus:bg-gold/10 focus:text-gold"
         >
           <LayoutDashboard />
           Dashboard
@@ -156,7 +156,7 @@ function AccountMenu({ user }: { user: SessionUser }) {
         <DropdownMenuItem
           closeOnClick
           onClick={() => router.push("/customer/profile")}
-          className="cursor-pointer gap-2.5 px-2.5 py-2 text-ivory hover:bg-gold/10 hover:text-gold focus:bg-gold/10 focus:text-gold"
+          className="cursor-pointer gap-2.5 px-2.5 py-2.5 text-ivory transition-colors hover:bg-gold/10 hover:text-gold focus:bg-gold/10 focus:text-gold"
         >
           <User />
           Profile
@@ -166,7 +166,7 @@ function AccountMenu({ user }: { user: SessionUser }) {
           closeOnClick
           onClick={handleSignOut}
           disabled={signingOut}
-          className="cursor-pointer gap-2.5 px-2.5 py-2 text-ivory hover:bg-gold/10 hover:text-gold focus:bg-gold/10 focus:text-gold disabled:opacity-50 disabled:cursor-not-allowed"
+          className="cursor-pointer gap-2.5 px-2.5 py-2.5 text-ivory transition-colors hover:bg-gold/10 hover:text-gold focus:bg-gold/10 focus:text-gold disabled:cursor-not-allowed disabled:opacity-50"
         >
           <LogOut />
           {signingOut ? (
@@ -201,7 +201,7 @@ function ScrollLink({ href, label, active, onClick, isAnchorActive }: { href: st
         }}
         aria-current={combinedActive ? "page" : undefined}
         className={cn(
-          "relative py-2 text-sm font-medium transition-colors after:absolute after:-bottom-0.5 after:left-0 after:h-px after:bg-gold after:transition-all after:duration-300 cursor-pointer",
+          "relative rounded-md px-1 py-2 text-sm font-medium transition-colors after:absolute after:-bottom-0.5 after:left-1 after:h-px after:bg-gold after:transition-all after:duration-300 cursor-pointer focus-visible:bg-gold/10",
           combinedActive
             ? "text-gold after:w-full"
             : "text-ivory after:w-0 hover:text-gold hover:after:w-full"
@@ -218,7 +218,7 @@ function ScrollLink({ href, label, active, onClick, isAnchorActive }: { href: st
       onClick={onClick}
       aria-current={combinedActive ? "page" : undefined}
       className={cn(
-        "relative py-2 text-sm font-medium transition-colors after:absolute after:-bottom-0.5 after:left-0 after:h-px after:bg-gold after:transition-all after:duration-300",
+        "relative rounded-md px-1 py-2 text-sm font-medium transition-colors after:absolute after:-bottom-0.5 after:left-1 after:h-px after:bg-gold after:transition-all after:duration-300 focus-visible:bg-gold/10",
         combinedActive
           ? "text-gold after:w-full"
           : "text-ivory after:w-0 hover:text-gold hover:after:w-full"
@@ -241,21 +241,22 @@ export function Navbar() {
   const whyChooseActive = useAnchorActive("#why-choose-salonbook")
 
   return (
-    <header className="sticky top-0 z-50 border-b border-dark-border bg-midnight/95 backdrop-blur-md">
-      <div className="mx-auto grid max-w-7xl grid-cols-[auto_1fr_auto] h-16 items-center gap-6 px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-50 border-b border-dark-border bg-midnight/95 shadow-[0_10px_30px_-24px_var(--midnight)] backdrop-blur-xl">
+      <div className="mx-auto flex h-[4.5rem] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* LEFT: SalonBook logo */}
         <Link
           href="/"
           aria-label="SalonBook — Home"
-          className="font-heading text-xl font-semibold tracking-wide text-gold transition-colors hover:text-gold-hover"
+          className="group flex shrink-0 items-center gap-2.5 rounded-lg font-heading text-xl font-semibold tracking-wide text-gold transition-colors hover:text-champagne focus-visible:ring-2 focus-visible:ring-gold/60"
         >
-          SalonBook
+          <span aria-hidden="true" className="flex size-8 items-center justify-center rounded-lg border border-gold/35 bg-gold/10 text-sm transition-all duration-300 group-hover:border-gold group-hover:bg-gold group-hover:text-midnight">S</span>
+          <span>SalonBook</span>
         </Link>
 
-        {/* CENTER: Navigation links - independently centered */}
+        {/* CENTER: Navigation links - hidden on mobile, shown on desktop */}
         <nav
           aria-label="Main navigation"
-          className="flex items-center justify-center gap-8"
+          className="hidden flex-1 items-center justify-center gap-5 md:flex lg:gap-8"
         >
           {publicLinks.map((link) => {
             const active = isActivePath(pathname, link.href)
@@ -273,8 +274,8 @@ export function Navbar() {
           })}
         </nav>
 
-        {/* RIGHT: Auth buttons / user menu */}
-        <div className="flex items-center justify-end gap-4">
+        {/* RIGHT: Auth buttons / user menu + Mobile hamburger */}
+        <div className="flex shrink-0 items-center justify-end gap-3">
           {isPending ? (
             <span
               aria-hidden="true"
@@ -286,7 +287,7 @@ export function Navbar() {
             <>
               <Link
                 href="/sign-in"
-                className="text-sm font-medium text-ivory hover:text-gold transition-colors"
+                className="hidden rounded-md px-1 py-2 text-sm font-medium text-ivory transition-colors hover:text-gold focus-visible:bg-gold/10 sm:inline-block"
               >
                 Sign In
               </Link>
@@ -294,7 +295,7 @@ export function Navbar() {
                 href="/sign-up"
                 className={cn(
                   buttonVariants({ size: "lg" }),
-                  "rounded-full bg-gold px-6 text-midnight hover:bg-gold-hover"
+                  "hidden h-10 rounded-full bg-gold px-5 text-midnight hover:bg-gold-hover hover:shadow-lg hover:shadow-gold/15 sm:inline-flex"
                 )}
               >
                 Sign Up
@@ -305,7 +306,7 @@ export function Navbar() {
           {/* Mobile hamburger */}
           <button
             type="button"
-            className="flex size-10 items-center justify-center rounded-lg text-ivory transition-colors hover:bg-ivory/10 hover:text-gold md:hidden"
+            className="flex size-10 items-center justify-center rounded-xl border border-transparent text-ivory transition-colors hover:border-gold/25 hover:bg-ivory/10 hover:text-gold md:hidden"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             aria-expanded={menuOpen}
             aria-controls="mobile-nav"
@@ -321,9 +322,9 @@ export function Navbar() {
         <nav
           id="mobile-nav"
           aria-label="Mobile navigation"
-          className="border-t border-dark-border bg-midnight/95 px-4 pt-3 pb-6 backdrop-blur-md sm:px-6 md:hidden"
+          className="border-t border-dark-border bg-midnight/98 px-4 pt-3 pb-6 shadow-2xl shadow-midnight/30 backdrop-blur-xl md:hidden"
         >
-          <div className="flex flex-col gap-1">
+          <div className="mx-auto flex max-w-7xl flex-col gap-1">
             {publicLinks.map((link) => {
               const active = isActivePath(pathname, link.href)
               const isAnchorActive = link.href === "#why-choose-salonbook" ? whyChooseActive : false
@@ -349,6 +350,26 @@ export function Navbar() {
               >
                 Sign Up
               </Link>
+            )}
+            {!showAuthLinks && user && (
+              <>
+                <Link
+                  href="/customer/profile"
+                  onClick={closeMenu}
+                  className="mt-2 flex items-center gap-2 rounded-lg px-2.5 py-2.5 text-ivory transition-colors hover:bg-gold/10 hover:text-gold"
+                >
+                  <User className="size-4" />
+                  Profile
+                </Link>
+                <Link
+                  href="/customer/dashboard"
+                  onClick={closeMenu}
+                  className="flex items-center gap-2 rounded-lg px-2.5 py-2.5 text-ivory transition-colors hover:bg-gold/10 hover:text-gold"
+                >
+                  <LayoutDashboard className="size-4" />
+                  Dashboard
+                </Link>
+              </>
             )}
           </div>
         </nav>

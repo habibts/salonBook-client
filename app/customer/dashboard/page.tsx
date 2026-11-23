@@ -111,13 +111,15 @@ export default function CustomerDashboardPage() {
   // Show loading while authentication is restoring
   if (isRestoring) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          eyebrow="My SalonBook"
-          title="Loading…"
-          description="Restoring your session"
-        />
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="space-y-8">
+        <section className="rounded-2xl border border-border bg-card/70 px-5 py-6 surface-raised sm:px-7">
+          <PageHeader
+            eyebrow="My SalonBook"
+            title="Loading…"
+            description="Restoring your session"
+          />
+        </section>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {cards.map((c, i) => (
             <StatCard
               key={c.title}
@@ -130,8 +132,8 @@ export default function CustomerDashboardPage() {
             />
           ))}
         </div>
-        <Card className="animate-rise">
-          <CardContent className="pt-4">
+        <Card className="animate-rise border-border bg-card">
+          <CardContent className="pt-5">
             <ul className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <li key={i}>
@@ -148,37 +150,45 @@ export default function CustomerDashboardPage() {
   // Show sign-in prompt if not authenticated
   if (!isAuthenticated || !user) {
     return (
-      <div className="space-y-6">
-        <PageHeader
-          eyebrow="My SalonBook"
-          title="Please sign in"
-          description="You need to be signed in to view your dashboard."
-          action={
-            <Button onClick={() => router.push("/sign-in")}>
-              Sign In
-              <ArrowRight className="ml-1 size-4" aria-hidden="true" />
-            </Button>
-          }
-        />
+      <div className="space-y-8">
+        <section className="rounded-2xl border border-border bg-card/70 px-5 py-6 surface-raised sm:px-7">
+          <PageHeader
+            eyebrow="My SalonBook"
+            title="Please sign in"
+            description="You need to be signed in to view your dashboard."
+            action={
+              <Button onClick={() => router.push("/sign-in")}>
+                Sign In
+                <ArrowRight className="ml-1 size-4" aria-hidden="true" />
+              </Button>
+            }
+          />
+        </section>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        eyebrow="My SalonBook"
-        title={firstName ? `Welcome back, ${firstName}` : "Your Dashboard"}
-        description="Track your appointments, see what is coming up and manage every visit in one place."
-        action={
-          <Button onClick={() => router.push("/book-appointment")}>
-            Book Appointment
-            <ArrowRight className="ml-1 size-4" aria-hidden="true" />
-          </Button>
-        }
-      />
+    <div className="space-y-8">
+      <section className="relative overflow-hidden rounded-2xl border border-border bg-card px-5 py-6 surface-raised sm:px-7 sm:py-7">
+        <span aria-hidden="true" className="absolute -top-16 -right-14 size-48 rounded-full border border-gold/20" />
+        <span aria-hidden="true" className="absolute top-0 right-0 h-px w-1/3 bg-gradient-to-l from-gold/70 to-transparent" />
+        <div className="relative">
+          <PageHeader
+            eyebrow="My SalonBook"
+            title={firstName ? `Welcome back, ${firstName}` : "Your Dashboard"}
+            description="Track your appointments, see what is coming up and manage every visit in one place."
+            action={
+              <Button className="h-10 px-5" onClick={() => router.push("/book-appointment")}>
+                Book Appointment
+                <ArrowRight className="ml-1 size-4" aria-hidden="true" />
+              </Button>
+            }
+          />
+        </div>
+      </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {cards.map((c, i) => (
           <StatCard
             key={c.title}
@@ -192,10 +202,10 @@ export default function CustomerDashboardPage() {
         ))}
       </div>
 
-      <Card className="animate-rise">
-        <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-border pb-4">
+      <Card className="animate-rise border-border bg-card surface-raised">
+        <CardHeader className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <CardTitle className="text-lg">Recent Appointments</CardTitle>
+            <CardTitle className="text-xl">Recent Appointments</CardTitle>
             <CardDescription>Your latest booking activity</CardDescription>
           </div>
           <Button
@@ -207,7 +217,7 @@ export default function CustomerDashboardPage() {
           </Button>
         </CardHeader>
 
-        <CardContent className="pt-4">
+        <CardContent className="pt-5">
           {loading ? (
             <ul className="space-y-3">
               {Array.from({ length: 3 }).map((_, i) => (
@@ -217,15 +227,15 @@ export default function CustomerDashboardPage() {
               ))}
             </ul>
           ) : error ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/60 px-6 py-10 text-center">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/60 px-6 py-12 text-center">
               <p className="text-sm text-destructive">{error}</p>
               <Button onClick={fetchAppointments} className="mt-4">
                 Retry
               </Button>
             </div>
           ) : recent.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/60 px-6 py-10 text-center">
-              <span className="flex size-12 items-center justify-center rounded-full bg-gold/10 text-gold">
+            <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-background/60 px-6 py-12 text-center">
+              <span className="flex size-14 items-center justify-center rounded-full border border-gold/20 bg-gold/10 text-gold">
                 <Scissors className="size-5" aria-hidden="true" />
               </span>
               <div>
@@ -248,17 +258,17 @@ export default function CustomerDashboardPage() {
               {recent.map((a) => (
                 <li
                   key={a._id}
-                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-3 transition-colors duration-200 hover:border-border hover:bg-background/70"
+                className="group flex flex-wrap items-center justify-between gap-3 rounded-xl border border-transparent px-3 py-3.5 transition-all duration-300 hover:border-gold/30 hover:bg-muted/40"
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span
                       aria-hidden="true"
-                      className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gold/10 text-gold"
+                      className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold transition-transform duration-300 group-hover:scale-105"
                     >
                       <CalendarDays className="size-4" />
                     </span>
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
+                      <p className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-gold">
                         {a.serviceName}
                       </p>
                       <p className="text-xs text-muted-foreground">
@@ -268,7 +278,7 @@ export default function CustomerDashboardPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-foreground tabular-nums">
+                    <span className="text-sm font-semibold text-foreground tabular-nums">
                       ${a.price ?? a.servicePrice ?? 0}
                     </span>
                     <StatusBadge status={a.status} />

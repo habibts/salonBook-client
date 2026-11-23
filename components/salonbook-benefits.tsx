@@ -36,10 +36,10 @@ const benefits = [
 
 export function SalonBookBenefits() {
   return (
-    <section className="py-16 md:py-20 lg:py-24 bg-soft-peach dark:bg-midnight">
+    <section className="bg-soft-peach py-16 md:py-20 lg:py-24 dark:bg-midnight">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-3xl mx-auto">
-          <p className="text-xs uppercase tracking-widest text-primary-rose dark:text-gold">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-rose dark:text-gold">
             WHY CHOOSE SALONBOOK
           </p>
           <h2 className="mt-3 font-heading text-3xl font-semibold text-dark-text dark:text-white sm:text-4xl lg:text-5xl">
@@ -51,11 +51,11 @@ export function SalonBookBenefits() {
           </p>
         </div>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {benefits.map((benefit, index) => (
             <Card
               key={benefit.title}
-              className="group relative overflow-hidden border border-soft-border bg-white hover:border-primary-rose/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-500 surface-raised animate-rise dark:border-dark-border dark:bg-charcoal"
+              className="group relative overflow-hidden border border-soft-border bg-card hover:-translate-y-1 hover:border-primary-rose/60 hover:shadow-xl focus-within:-translate-y-1 focus-within:border-primary-rose/60 transition-all duration-500 surface-raised animate-rise dark:border-dark-border"
               style={{ animationDelay: `${index * 80}ms` }}
             >
               <div className="absolute inset-0 bg-gradient-to-br from-primary-rose/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 dark:from-gold/5" />

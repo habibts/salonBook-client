@@ -59,11 +59,11 @@ export function ServiceCategories() {
             <Skeleton className="h-4 w-64" />
             <Skeleton className="h-4 w-80" />
           </div>
-          <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="relative w-full overflow-hidden rounded-xl border border-soft-border sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] dark:border-dark-border"
+                className="relative overflow-hidden rounded-xl border border-soft-border dark:border-dark-border"
               >
                 <Skeleton className="aspect-[4/3] w-full" />
                 <div className="absolute bottom-0 left-0 right-0 p-4">
@@ -95,29 +95,29 @@ export function ServiceCategories() {
   if (categories.length === 0) return null
 
   return (
-    <section className="bg-light-rose py-16 md:py-20 dark:bg-midnight">
+    <section className="bg-light-rose py-16 md:py-20 lg:py-24 dark:bg-midnight">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <p className="text-xs uppercase tracking-widest text-primary-rose dark:text-gold">DISCOVER OUR EXPERTISE</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-rose dark:text-gold">DISCOVER OUR EXPERTISE</p>
         <h2 className="mt-2 font-heading text-3xl font-semibold text-dark-text dark:text-white">Explore Our Services</h2>
         <div className="mt-2 h-px w-12 bg-primary-rose dark:bg-gold" />
         <p className="mt-4 max-w-2xl text-muted-text dark:text-champagne">
           From precision cuts to premium grooming, discover the perfect service for your style.
         </p>
 
-        <div className="mt-8 flex flex-wrap justify-center gap-4">
+        <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {categories.map((c, i) => (
             <Link
               key={c.name}
               href={`/services?category=${encodeURIComponent(c.name)}`}
-              className="group relative w-full overflow-hidden rounded-xl border border-soft-border sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] transition-all duration-500 hover:border-primary-rose/50 hover:shadow-xl hover:-translate-y-1 dark:border-dark-border"
+              className="group relative overflow-hidden rounded-xl border border-soft-border transition-all duration-500 hover:-translate-y-1 hover:border-primary-rose/60 hover:shadow-xl focus-visible:-translate-y-1 focus-visible:border-primary-rose/60 focus-visible:shadow-xl dark:border-dark-border"
             >
               <img
                 src={c.image}
                 alt={c.name}
-                className="aspect-[4/3] w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="aspect-[4/3] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-dark-text/60 to-dark-text/10 transition-opacity duration-500 group-hover:from-dark-text/80 dark:from-midnight/60 dark:to-midnight/10" />
-              <div className="absolute bottom-0 left-0 right-0 p-4">
+              <div className="absolute right-0 bottom-0 left-0 p-5">
                 <span className="text-xs text-primary-rose dark:text-gold">0{i + 1}</span>
                 <h3 className="font-heading text-lg text-white">{c.name}</h3>
                 <span className="inline-flex items-center gap-1 text-sm text-primary-rose transition-transform group-hover:translate-x-1 dark:text-gold">

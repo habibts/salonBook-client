@@ -41,7 +41,9 @@ export default function RootLayout({
         <ThemeProvider>
           <TokenStoreProvider>
             <SiteHeader />
-            {children}
+            <main className="mx-auto max-w-7xl">
+              {children}
+            </main>
             <SiteFooter />
             <Toaster />
           </TokenStoreProvider>

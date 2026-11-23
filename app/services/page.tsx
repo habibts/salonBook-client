@@ -112,16 +112,27 @@ function ServicesPageContent() {
   return (
     <div className="bg-background py-12 md:py-16 lg:py-20">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <h1 className="font-heading text-3xl font-semibold text-foreground sm:text-4xl">
-          Explore Our Services
-        </h1>
-        <p className="mt-2 max-w-2xl text-muted-foreground">
-          Discover premium grooming services tailored to your style.
-        </p>
+        <section className="relative overflow-hidden rounded-2xl border border-border bg-card px-5 py-7 surface-raised sm:px-8 sm:py-9">
+          <span aria-hidden="true" className="absolute -top-20 -right-16 size-56 rounded-full border border-gold/20" />
+          <span aria-hidden="true" className="absolute top-0 right-0 h-px w-1/3 bg-gradient-to-l from-gold/70 to-transparent" />
+          <div className="relative">
+            <p className="flex items-center gap-2.5 text-[11px] font-semibold tracking-[0.22em] text-charcoal uppercase dark:text-gold">
+              <span aria-hidden="true" className="h-px w-7 bg-gold/70" />
+              SalonBook services
+            </p>
+            <h1 className="mt-3 font-heading text-3xl font-semibold text-foreground sm:text-4xl">
+              Explore Our Services
+            </h1>
+            <p className="mt-3 max-w-2xl leading-7 text-muted-foreground">
+              Discover premium grooming services tailored to your style.
+            </p>
+          </div>
+        </section>
 
-        <div className="mt-6 flex flex-col gap-4 md:flex-row">
+        <section className="mt-6 rounded-2xl border border-border bg-card p-4 surface-raised sm:p-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
+            <Search className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search services..."
               value={search}
@@ -130,7 +141,7 @@ function ServicesPageContent() {
                 setSearch(value)
                 updateUrl({ search: value })
               }}
-              className="border-border bg-card pl-9 text-foreground"
+              className="h-11 border-border bg-background pl-10 text-foreground"
             />
           </div>
           <Select value={category} onValueChange={(v) => {
@@ -138,7 +149,7 @@ function ServicesPageContent() {
             setCategory(value)
             updateUrl({ category: value === "all" ? "" : value })
           }}>
-            <SelectTrigger className="w-full border-border bg-card text-foreground md:w-48">
+            <SelectTrigger className="h-11 w-full border-border bg-background text-foreground md:w-48">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent className="border-border bg-card text-foreground">
@@ -155,7 +166,7 @@ function ServicesPageContent() {
             setSort(value)
             updateUrl({ sort: value === "none" ? "" : value })
           }}>
-            <SelectTrigger className="w-full border-border bg-card text-foreground md:w-48">
+            <SelectTrigger className="h-11 w-full border-border bg-background text-foreground md:w-48">
               <SelectValue placeholder="Sort by price" />
             </SelectTrigger>
             <SelectContent className="border-border bg-card text-foreground">
@@ -164,17 +175,21 @@ function ServicesPageContent() {
               <SelectItem value="high">Price: High to Low</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" onClick={clearFilters} className="border-border">
+          <Button variant="outline" onClick={clearFilters} className="h-11 border-border bg-card px-5">
             Clear Filters
           </Button>
-        </div>
+          </div>
+        </section>
 
         {!loading && !error && (
-          <p className="mt-4 text-sm text-muted-foreground">{filtered.length} services found</p>
+          <div className="mt-6 flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">{filtered.length} services found</p>
+            <span className="hidden h-px flex-1 bg-border sm:block" />
+          </div>
         )}
 
         {loading ? (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} className="flex h-full flex-col overflow-hidden border-border bg-card">
                 <Skeleton className="aspect-[16/9] w-full" />
@@ -196,16 +211,19 @@ function ServicesPageContent() {
             ))}
           </div>
         ) : error ? (
-          <div className="mt-6 text-center">
-            <p className="text-destructive dark:text-champagne">{error}</p>
+          <div className="mt-6 flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-card px-6 py-14 text-center">
+            <p className="text-sm text-destructive dark:text-champagne">{error}</p>
             <Button onClick={fetchServices} className="mt-4">
               Retry
             </Button>
           </div>
         ) : filtered.length === 0 ? (
-          <p className="mt-6 text-center text-muted-foreground">No services found. Try adjusting filters.</p>
+          <div className="mt-6 rounded-2xl border border-dashed border-border bg-card px-6 py-14 text-center">
+            <p className="font-heading text-xl text-foreground">No services found</p>
+            <p className="mt-2 text-sm text-muted-foreground">Try adjusting your search or filters.</p>
+          </div>
         ) : (
-          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((service) => (
               <ServiceCard key={service._id} service={service} />
             ))}

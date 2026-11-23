@@ -56,7 +56,9 @@ export function FeaturedServices() {
   }, [])
 
   return (
-    <section className="bg-midnight py-14 md:py-20 lg:py-24">
+    <section className="relative isolate overflow-hidden bg-midnight py-16 md:py-20 lg:py-24">
+      <div aria-hidden="true" className="absolute top-20 left-0 h-px w-1/4 bg-gradient-to-r from-transparent to-gold/40" />
+      <div aria-hidden="true" className="absolute right-0 bottom-16 h-px w-1/3 bg-gradient-to-l from-transparent to-gold/30" />
       <div className="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">
           OUR PREMIUM SERVICES
@@ -69,9 +71,9 @@ export function FeaturedServices() {
         </p>
       </div>
 
-      <div className="mx-auto mt-10 max-w-7xl rounded-2xl bg-ivory p-4 sm:p-6 lg:p-8 dark:bg-charcoal/70">
+      <div className="relative mx-auto mt-10 max-w-7xl rounded-2xl border border-champagne/35 bg-ivory p-4 shadow-2xl shadow-midnight/25 sm:p-6 lg:p-8 dark:border-dark-border dark:bg-charcoal/80">
         {loading ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i} className="flex h-full flex-col border-border bg-card">
                 <Skeleton className="aspect-[16/9] w-full" />
@@ -103,14 +105,14 @@ export function FeaturedServices() {
           <p className="text-center text-muted-foreground dark:text-champagne">No services available.</p>
         ) : (
           <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {services.map((service) => (
                 <ServiceCard key={service._id} service={service} />
               ))}
             </div>
             <div className="mt-8 text-center">
               <Button
-                className="border border-gold/50 bg-midnight text-ivory hover:border-gold hover:bg-charcoal"
+                className="border border-gold/50 bg-midnight px-5 text-ivory hover:border-gold hover:bg-charcoal"
                 onClick={() => router.push("/services")}
               >
                 Explore All Services

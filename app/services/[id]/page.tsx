@@ -100,10 +100,10 @@ export default function ServiceDetailsPage() {
   if (loading || isRestoring) {
     return (
       <div className="bg-background">
-        <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="container mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
           <Skeleton className="h-4 w-48 mb-6" />
           <Skeleton className="aspect-[16/7] w-full rounded-2xl mb-6" />
-          <div className="rounded-2xl bg-card p-8">
+          <div className="rounded-2xl border border-border bg-card p-8 surface-raised">
             <Skeleton className="h-4 w-48 mb-3" />
             <Skeleton className="h-5 w-32 mb-4" />
             <Skeleton className="h-8 w-3/4 mb-4" />
@@ -118,7 +118,7 @@ export default function ServiceDetailsPage() {
           </div>
           <div className="mt-12">
             <Skeleton className="h-6 w-48 mb-4" />
-            <div className="rounded-xl border border-border bg-card p-6 space-y-3">
+            <div className="space-y-3 rounded-xl border border-border bg-card p-6">
               <Skeleton className="h-4 w-full" />
               <Skeleton className="h-4 w-3/4" />
               <Skeleton className="h-4 w-1/2" />
@@ -144,7 +144,7 @@ export default function ServiceDetailsPage() {
 
   if (error || !service) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
+      <div className="container mx-auto px-4 py-12 text-center">
         <p className="text-destructive dark:text-champagne">{error ?? "Service not found"}</p>
         <Button onClick={() => setRetryKey((k) => k + 1)} className="mt-4">
           Retry
@@ -155,67 +155,72 @@ export default function ServiceDetailsPage() {
 
   return (
     <div className="bg-background">
-      <div className="container mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        <nav className="mb-6 text-sm text-muted-foreground">
-          <Link href="/" className="hover:text-gold">Home</Link>
+      <div className="container mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+        <nav className="mb-7 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+          <Link href="/" className="rounded-sm transition-colors hover:text-gold focus-visible:text-gold">Home</Link>
           {" / "}
-          <Link href="/services" className="hover:text-gold">Browse Services</Link>
+          <Link href="/services" className="rounded-sm transition-colors hover:text-gold focus-visible:text-gold">Browse Services</Link>
           {" / "}
           <span className="text-foreground">{service.serviceName}</span>
         </nav>
 
-        <section>
+        <section className="grid gap-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:items-stretch">
           <img
             src={imageError ? PLACEHOLDER_IMAGE : service.image}
             alt={service.serviceName}
-            className="aspect-[16/7] w-full rounded-2xl object-cover object-[center_25%]"
+            className="h-full min-h-72 w-full rounded-2xl border border-border object-cover object-[center_25%] shadow-xl shadow-midnight/15"
             onError={() => setImageError(true)}
           />
-          <div className="mt-6 rounded-2xl bg-charcoal p-8 text-ivory">
-            <p className="text-xs uppercase tracking-widest text-gold">SALONBOOK PREMIUM SERVICE</p>
-            <span className="mt-3 inline-block rounded-full bg-gold/10 px-3 py-1 text-sm text-gold">{service.category}</span>
-            <h1 className="mt-4 font-heading text-3xl font-semibold sm:text-4xl">{service.serviceName}</h1>
-            <p className="mt-4 text-champagne">{service.description}</p>
-            <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-6">
-                <span className="text-2xl font-semibold text-gold">${service.price}</span>
-                <span className="text-ivory">{service.duration} min</span>
+          <div className="relative overflow-hidden rounded-2xl bg-charcoal p-6 text-ivory shadow-xl shadow-midnight/20 sm:p-8">
+            <span aria-hidden="true" className="absolute -top-20 -right-16 size-56 rounded-full border border-gold/20" />
+            <div className="relative flex h-full flex-col">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-gold">SALONBOOK PREMIUM SERVICE</p>
+              <span className="mt-4 inline-flex w-fit rounded-full border border-gold/25 bg-gold/10 px-3 py-1 text-sm text-gold">{service.category}</span>
+              <h1 className="mt-5 font-heading text-3xl font-semibold leading-tight sm:text-4xl">{service.serviceName}</h1>
+              <p className="mt-4 leading-7 text-champagne">{service.description}</p>
+              <div className="mt-7 flex flex-wrap items-end justify-between gap-5 border-t border-dark-border pt-5">
+                <div className="flex items-center gap-5">
+                  <span className="font-heading text-3xl font-semibold text-gold">${service.price}</span>
+                  <span className="border-l border-dark-border pl-5 text-sm text-champagne">{service.duration} min</span>
+                </div>
               </div>
               <Button
-                className="w-full bg-gold text-midnight hover:bg-gold-hover sm:w-auto"
+                className="mt-6 w-full bg-gold px-6 text-midnight hover:bg-gold-hover hover:shadow-lg hover:shadow-gold/15 sm:w-auto"
                 disabled={isAdmin || !isActive}
                 onClick={handleBook}
               >
                 {isAdmin ? "Booking not available for admin" : "Book Appointment"}
               </Button>
+              <p className="mt-4 text-sm text-champagne">Status: {service.status}</p>
+              {!isActive && <p className="mt-2 text-destructive dark:text-champagne">This service is not available for booking.</p>}
             </div>
-            <p className="mt-2 text-sm text-champagne">Status: {service.status}</p>
-            {!isActive && <p className="mt-2 text-destructive dark:text-champagne">This service is not available for booking.</p>}
           </div>
         </section>
 
-        <section className="mt-12">
+        <section className="mt-14">
           <h2 className="font-heading text-2xl font-semibold text-foreground">About This Service</h2>
-          <Card className="mt-4 border-border bg-card">
-            <CardContent className="space-y-3 p-6 text-muted-foreground">
-              <p>{service.description}</p>
-              <p><strong className="text-foreground">Category:</strong> {service.category}</p>
-              <p><strong className="text-foreground">Duration:</strong> {service.duration} min</p>
-              <p><strong className="text-foreground">Price:</strong> ${service.price}</p>
+          <Card className="mt-5 border-border bg-card surface-raised">
+            <CardContent className="grid gap-5 p-6 text-muted-foreground sm:grid-cols-[minmax(0,1.35fr)_minmax(12rem,0.65fr)] sm:p-7">
+              <p className="leading-7">{service.description}</p>
+              <div className="grid gap-3 rounded-xl border border-border bg-muted/45 p-4 text-sm">
+                <p><strong className="text-foreground">Category:</strong> {service.category}</p>
+                <p><strong className="text-foreground">Duration:</strong> {service.duration} min</p>
+                <p><strong className="text-foreground">Price:</strong> ${service.price}</p>
+              </div>
             </CardContent>
           </Card>
         </section>
 
-        <section className="mt-12">
+        <section className="mt-14">
           <h2 className="font-heading text-2xl font-semibold text-foreground">Why Choose SalonBook</h2>
-          <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <div className="mt-5 grid gap-5 sm:grid-cols-3">
             {[
               { icon: Scissors, title: "Expert Styling", desc: "Skilled professionals for your look." },
               { icon: Crown, title: "Premium Care", desc: "Quality products and service." },
               { icon: Award, title: "Personalized Experience", desc: "Tailored to your needs." },
             ].map((f) => (
-              <Card key={f.title} className="border-border bg-card p-6 text-center">
-                <f.icon className="mx-auto size-8 text-gold" />
+              <Card key={f.title} className="group border-border bg-card p-6 text-center transition-all duration-300 hover:-translate-y-1 hover:border-gold/50 hover:surface-floating">
+                <span className="mx-auto flex size-12 items-center justify-center rounded-xl bg-gold/10 text-gold transition-transform duration-300 group-hover:scale-105"><f.icon className="size-6" /></span>
                 <h3 className="mt-3 font-heading text-lg text-foreground">{f.title}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{f.desc}</p>
               </Card>
@@ -224,9 +229,9 @@ export default function ServiceDetailsPage() {
         </section>
 
         {related.length > 0 && (
-          <section className="mt-12">
+          <section className="mt-14">
             <h2 className="font-heading text-2xl font-semibold text-foreground">Related Services</h2>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
               {related.map((s) => (
                 <ServiceCard key={s._id} service={s} />
               ))}
@@ -234,16 +239,19 @@ export default function ServiceDetailsPage() {
           </section>
         )}
 
-        <section className="mt-12 rounded-2xl bg-midnight px-6 py-12 text-center">
+        <section className="relative mt-14 overflow-hidden rounded-2xl bg-midnight px-6 py-14 text-center sm:px-10">
+          <span aria-hidden="true" className="absolute -top-20 left-1/2 size-72 -translate-x-1/2 rounded-full border border-gold/20" />
+          <div className="relative">
           <h2 className="font-heading text-2xl font-semibold text-ivory">Ready for a Fresh Look?</h2>
           <p className="mt-2 text-champagne">Book your next grooming experience with SalonBook.</p>
           <Button
-            className="mt-6 bg-gold text-midnight hover:bg-gold-hover"
+            className="mt-6 bg-gold px-6 text-midnight hover:bg-gold-hover hover:shadow-lg hover:shadow-gold/15"
             disabled={isAdmin || !isActive}
             onClick={handleBook}
           >
             Book Your Appointment
           </Button>
+          </div>
         </section>
       </div>
     </div>

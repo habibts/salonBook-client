@@ -23,15 +23,15 @@ export function ServiceCard({ service }: { service: Service }) {
   const [imageError, setImageError] = useState(false)
 
   return (
-    <Card className="group flex h-full flex-col border-border bg-card text-card-foreground hover:-translate-y-1 hover:border-gold/60 hover:surface-floating">
+    <Card className="group flex h-full flex-col border-border bg-card text-card-foreground hover:-translate-y-1 hover:border-gold/60 hover:surface-floating focus-within:border-gold/70 focus-within:surface-floating">
       <img
         src={imageError ? PLACEHOLDER_IMAGE : service.image}
         alt={service.serviceName}
-        className="aspect-[16/9] w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]"
+        className="aspect-[16/9] w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.045]"
         onError={() => setImageError(true)}
       />
       <CardHeader className="flex-1">
-        <CardTitle className="line-clamp-2 font-heading text-foreground">{service.serviceName}</CardTitle>
+        <CardTitle className="line-clamp-2 font-heading text-lg text-foreground">{service.serviceName}</CardTitle>
         <Badge className="border-gold/30 bg-gold/10 text-charcoal dark:text-gold">{service.category}</Badge>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col">
